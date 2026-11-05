@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <script>window.MM_API_URL = "https://script.google.com/macros/s/AKfycbyJEscB8_1h4PCF7aoppzqzLxMZ9q-lRc6EcaSrkhUHSS5Pl7zXHOjSEDyOtDogoBcRVg/exec";</script>
+  <meta name="robots" content="noindex,nofollow">
+    <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minpaku Management</title>
+  <style>
+  :root {
+    --navy: #1F3864;
+    --blue: #2E5C8A;
+    --ink: #1E2430;
+    --ink-2: #4A5363;
+    --ink-3: #7A8394;
+    --line: #DDE2EA;
+    --line-2: #EEF1F5;
+    --bg: #F4F6F9;
+    --card: #FFFFFF;
+    --fy-now: #FCE4D6;
+    --fy-prev: #DCE6F1;
+    --diff: #EDEDED;
+    --good: #2E7D32;
+    --good-bg: #E3F1E4;
+    --bad: #B3261E;
+    --bad-bg: #FBE3E1;
+    --warn: #8A5A00;
+    --warn-bg: #FFF3D6;
+    --input: #FFF8E1;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+    font-size: 14px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num, td.n, th.n { font-variant-numeric: tabular-nums; }
+
+  /* ---------- layout：左サイドバー ---------- */
+  .app { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+  .side {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    background: var(--navy); color: #fff; display: flex; flex-direction: column; gap: 18px;
+    padding: 18px 14px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; line-height: 1.25; }
+  .brand small { display: block; font-weight: 400; opacity: .6; font-size: 11px; margin-top: 2px; }
+  .brand .logo { width: 30px; height: 30px; border-radius: 8px; background: #fff; color: var(--navy); display: grid; place-items: center; font-size: 15px; flex: none; }
+  .side-controls { display: grid; gap: 4px; }
+  .side-controls label { font-size: 11px; opacity: .65; margin-top: 6px; }
+  .side-controls select, .side-controls input[type=date] {
+    font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,.22);
+    background: rgba(255,255,255,.08); color: #fff; min-height: 34px; width: 100%; color-scheme: dark;
+  }
+  .side-controls select option { color: var(--ink); }
+  .nav { display: grid; gap: 2px; }
+  .nav .grp { font-size: 11px; opacity: .5; padding: 12px 10px 4px; letter-spacing: .04em; }
+  .nav .tab {
+    font: inherit; font-size: 13px; display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 9px 10px; border: 0; border-radius: 7px; background: none; color: rgba(255,255,255,.78); cursor: pointer;
+  }
+  .nav .tab svg { width: 17px; height: 17px; flex: none; pointer-events: none; opacity: .85; }
+  .nav .tab span { pointer-events: none; }
+  .nav .tab:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .nav .tab.on { background: rgba(255,255,255,.16); color: #fff; font-weight: 700; }
+  .side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    font: inherit; font-size: 13px; padding: 7px 14px; min-height: 34px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+  }
+  .btn:hover { border-color: var(--blue); }
+  .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn.primary:hover { background: #244C74; }
+  .btn.ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.35); }
+  .btn.small { padding: 3px 9px; min-height: 26px; font-size: 12px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  main { min-width: 0; width: 100%; max-width: 1440px; padding: 24px 28px; }
+  .page-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin: 4px 0 16px; }
+  .page-head h1 { font-size: 20px; margin: 0; }
+  .page-head .meta { color: var(--ink-3); font-size: 12px; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px; }
+  .card h2 { font-size: 15px; margin: 0 0 4px; }
+  .card .sub { color: var(--ink-3); font-size: 12px; margin: 0 0 12px; }
+  .grid { display: grid; gap: 12px; }
+  .g6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  @media (max-width: 1360px) { .g6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .g6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .g5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  @media (max-width: 1200px) { .g5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 700px) { .g5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 1000px) { .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+
+  /* ---------- KPI ---------- */
+  .kpi { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; background: #fff; }
+  .kpi .label { font-size: 12px; color: var(--ink-3); display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .kpi .big { font-size: 26px; font-weight: 700; margin: 2px 0 0; letter-spacing: -.01em; }
+  .kpi .big small { font-size: 13px; font-weight: 500; color: var(--ink-3); margin-left: 4px; }
+  .kpi .rows { margin-top: 8px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 12px; color: var(--ink-2); }
+  .kpi .rows span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .bar { height: 6px; border-radius: 3px; background: var(--line-2); margin-top: 8px; overflow: hidden; position: relative; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--blue); border-radius: 3px; }
+  .bar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-3); }
+  .chip { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+  .chip.up { background: var(--good-bg); color: var(--good); }
+  .chip.down { background: var(--bad-bg); color: var(--bad); }
+  .chip.flat { background: var(--line-2); color: var(--ink-3); }
+  .chip.future { background: #E8EEF7; color: var(--blue); }
+
+  .alerts { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .alerts li { padding: 9px 12px; border-radius: 8px; border-left: 4px solid; font-size: 13px; }
+  .alerts .high { background: var(--bad-bg); border-color: var(--bad); }
+  .alerts .mid { background: var(--warn-bg); border-color: #E0A800; }
+  .alerts .info { background: #EEF3FA; border-color: var(--blue); }
+  .empty { color: var(--ink-3); font-size: 13px; padding: 8px 0; }
+
+  /* ---------- tables ---------- */
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th, td { border: 1px solid var(--line); padding: 5px 8px; white-space: nowrap; }
+  thead th { background: var(--blue); color: #fff; font-weight: 600; position: sticky; top: 0; }
+  td.n, th.n { text-align: right; }
+  td.c { text-align: center; }
+  td.lbl { background: #F2F2F2; font-weight: 600; }
+  td.fy-now { background: var(--fy-now); font-weight: 600; }
+  td.fy-prev { background: var(--fy-prev); font-weight: 600; }
+  td.fy-diff, tr.diff td.n { background: var(--diff); font-weight: 600; }
+  tr.prev td.n { color: #1A3F99; }
+  tr.total td { font-weight: 700; background: #F6F8FB; }
+  td.future, th.future { background-image: repeating-linear-gradient(135deg, rgba(46,92,138,.06) 0 6px, transparent 6px 12px); }
+  td.pos { color: var(--good); font-weight: 700; }
+  td.neg { color: var(--bad); font-weight: 700; background: var(--bad-bg); }
+  td.muted, span.muted { color: var(--ink-3); }
+  tr.hl td { background: #FFF6CC; }
+  tr.floor td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
+
+  /* ---------- calendar ---------- */
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; color: var(--ink-2); margin-bottom: 12px; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; border: 1px solid rgba(0,0,0,.08); }
+  .cal-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .cal { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+  .cal-h { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 10px; background: #F3F5F8; font-size: 13px; font-weight: 700; }
+  .cal-h span { font-weight: 500; color: var(--ink-2); font-size: 12px; }
+  .cal-g { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-g div { height: 30px; display: flex; align-items: center; justify-content: center; font-size: 12px; border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
+  .cal-g div.wd { height: auto; padding: 3px 0; font-size: 11px; color: var(--ink-3); background: #FAFBFC; }
+  .cal-g div.sun { color: #C0392B; } .cal-g div.sat { color: #1F5FA8; }
+  .cal-g div.fut { font-weight: 700; font-style: italic; }
+  .cal-g div.pre { background: repeating-linear-gradient(135deg, #F1F1F1 0 4px, #FAFAFA 4px 8px); color: #BBB; }
+  .cal.preopen .cal-h { color: var(--ink-3); }
+  .cal-col-h { font-size: 12px; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; }
+
+  /* ---------- segmented ---------- */
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+  .seg button { font: inherit; font-size: 12.5px; padding: 7px 13px; border: 0; background: none; cursor: pointer; color: var(--ink-2); border-right: 1px solid var(--line); }
+  .seg button:last-child { border-right: 0; }
+  .seg button.on { background: var(--navy); color: #fff; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+
+  /* ---------- forms ---------- */
+  fieldset { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px 6px; margin: 0 0 14px; background: #fff; }
+  legend { font-weight: 700; font-size: 13px; padding: 0 6px; color: var(--navy); }
+  .field { display: grid; grid-template-columns: 230px 1fr; gap: 6px 14px; align-items: start; padding: 8px 0; border-bottom: 1px dashed var(--line-2); }
+  .field:last-child { border-bottom: 0; }
+  .field > label { font-size: 13px; font-weight: 600; padding-top: 7px; }
+  .field > label .req { color: var(--bad); margin-left: 3px; }
+  .field .help { font-size: 11.5px; color: var(--ink-3); margin-top: 3px; }
+  .field input, .field select, .field textarea {
+    font: inherit; font-size: 13px; padding: 7px 9px; border: 1px solid #CBD2DC; border-radius: 6px; background: var(--input); width: 100%; max-width: 420px;
+  }
+  .field input[readonly] { background: #F2F4F7; color: var(--ink-3); }
+  .field textarea { min-height: 64px; max-width: 640px; }
+  .inwrap { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .unit { color: var(--ink-3); font-size: 12px; }
+  .sugg { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; background: #EAF4EA; color: var(--good); border-radius: 6px; padding: 3px 4px 3px 9px; }
+  .sugg.same { background: var(--line-2); color: var(--ink-3); padding-right: 9px; }
+  .sticky-actions { position: sticky; bottom: 0; background: rgba(244,246,249,.95); padding: 12px 0; display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--line); }
+  .note { font-size: 12.5px; color: var(--ink-2); background: #EEF3FA; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; }
+
+  .drop { border: 2px dashed #B7C3D3; border-radius: var(--radius); padding: 28px; text-align: center; background: #fff; color: var(--ink-2); }
+  .drop.over { border-color: var(--blue); background: #EEF3FA; }
+  .steps { margin: 0; padding-left: 20px; font-size: 13px; color: var(--ink-2); }
+  .steps li { margin: 3px 0; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; background: var(--line-2); padding: 1px 5px; border-radius: 4px; }
+
+  /* ---------- states ---------- */
+  .loading { position: fixed; inset: 0; background: rgba(244,246,249,.6); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .loading.on { display: flex; }
+  .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--navy); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast { position: fixed; right: 18px; bottom: 18px; max-width: 460px; padding: 12px 16px; border-radius: 8px; color: #fff; background: var(--ink); box-shadow: 0 6px 24px rgba(0,0,0,.2); z-index: 60; display: none; font-size: 13px; }
+  .toast.on { display: block; }
+  .toast.err { background: var(--bad); }
+  .toast.ok { background: var(--good); }
+
+  svg.chart { width: 100%; height: auto; display: block; }
+  svg.chart text { font-size: 11px; fill: var(--ink-3); font-family: inherit; }
+  .legend-row { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+  .legend-row i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; vertical-align: 3px; margin-right: 5px; }
+
+
+  /* ---------- ピックアップ在庫表 ---------- */
+  .inv-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 4px; }
+  table.inv { border-collapse: separate; border-spacing: 0; font-size: 11px; width: max-content; }
+  table.inv th, table.inv td { width: 40px; min-width: 40px; height: 28px; padding: 0 2px; text-align: center; border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  table.inv .rh { position: sticky; left: 0; z-index: 2; width: 132px; min-width: 132px; text-align: left; padding: 0 8px; background: #F6F8FB; font-weight: 600; font-size: 12px; border-right: 1px solid var(--line); }
+  table.inv .rh small { display: block; font-weight: 400; font-size: 10px; color: var(--ink-3); line-height: 1.2; }
+  table.inv thead th { background: #F6F8FB; color: var(--ink-2); font-weight: 600; }
+  table.inv tr.mh th { text-align: left; padding-left: 6px; color: var(--navy); font-size: 12px; }
+  table.inv .mstart { border-left: 2px solid var(--navy); }
+  table.inv th.sat, table.inv td.sat { color: #1A5FB4; } table.inv th.sat { background: #E7F0FB; }
+  table.inv th.sun, table.inv td.sun { color: var(--bad); } table.inv th.sun { background: #FCE9E7; }
+  table.inv th.today { background: var(--navy); color: #fff; }
+  table.inv tr.now td, table.inv tr.ly td { height: 34px; font-weight: 700; font-size: 11px; }
+  table.inv td.bk { background: var(--c); color: var(--ink); }
+  table.inv td.bk.past { opacity: .55; }
+  table.inv td.lyl { background: repeating-linear-gradient(135deg, var(--c) 0 4px, #fff 4px 8px); color: var(--ink-2); font-weight: 600; }
+  table.inv td.pre { background: repeating-linear-gradient(135deg, #E5E5E5 0 3px, #FAFAFA 3px 6px); }
+  table.inv tr.sub td { color: var(--ink-3); font-size: 10.5px; height: 22px; }
+  table.inv tr.ly .rh { background: #EEF3FA; }
+  table.inv tr.ly td { border-top: 2px solid var(--line); }
+  table.inv tr.lyd td { height: 34px; font-size: 10.5px; color: var(--ink-2); line-height: 1.15; }
+  table.inv tr.lyd td small { display: block; font-size: 10px; }
+  table.inv tr.lyd td.sat { background: #E7F0FB; color: #1A5FB4; }
+  table.inv tr.lyd td.sun { background: #FCE9E7; color: var(--bad); }
+  table.inv tr.ms td i { display: inline-block; width: 8px; height: 8px; border-radius: 4px; background: #B7791F; }
+  .lyl-sw { background: repeating-linear-gradient(135deg, #F8CBAD 0 3px, #fff 3px 6px) !important; }
+  .pre-sw { background: repeating-linear-gradient(135deg, #E5E5E5 0 3px, #FAFAFA 3px 6px) !important; }
+
+  /* ---------- レート表の手数料バー ---------- */
+  .feebar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 2.4fr); gap: 0; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
+  .feebar > div { padding: 10px 14px; border-right: 1px solid var(--line-2); display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .feebar > div:last-child { border-right: 0; }
+  .feebar span { font-size: 11px; color: var(--ink-3); }
+  .feebar b { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .feebar small { font-size: 11px; color: var(--ink-2); line-height: 1.45; }
+  @media (max-width: 1100px) { .feebar { grid-template-columns: repeat(2, minmax(0, 1fr)); } .feebar .wide { grid-column: 1 / -1; border-top: 1px solid var(--line-2); } .feebar > div:nth-child(2) { border-right: 0; } }
+
+  /* ---------- マスタ：販売チャネル ---------- */
+  .field.wide { grid-template-columns: minmax(0, 1fr); }
+  .field > div { min-width: 0; }
+  fieldset { min-width: 0; }
+  table.ch-table td, table.ch-table th { vertical-align: middle; }
+  table.ch-table input[type=text], table.ch-table input[type=number], table.ch-table select { font: inherit; font-size: 13px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; background: var(--input); min-height: 32px; }
+  table.ch-table input[type=checkbox] { width: 18px; height: 18px; }
+
+  /* ---------- 施策記録 ---------- */
+  .mform { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px 14px; align-items: start; }
+  .mform > label { font-size: 13px; font-weight: 600; padding-top: 7px; }
+  .mform .req { color: var(--bad); margin-left: 3px; }
+  .mform input, .mform select, .mform textarea { font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--input); min-height: 34px; width: 100%; }
+  .mform textarea { min-height: 60px; max-width: 640px; }
+  .mlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .mlist li { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed var(--line-2); }
+  .mlist li:last-child { border-bottom: 0; }
+  .btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+
+  /* ---------- データ取込の頻度 ---------- */
+  .cadence .when { display: inline-flex; align-items: baseline; gap: 8px; font-weight: 700; color: #fff; background: var(--blue); border-radius: 999px; padding: 3px 12px; font-size: 13px; margin-bottom: 8px; }
+  .cadence .when.m { background: #7B5EA7; }
+  .cadence .period { display: inline-block; background: var(--input); border: 1px solid #E8D9A8; border-radius: 6px; padding: 1px 8px; margin-right: 6px; font-variant-numeric: tabular-nums; }
+  .cadence .when small { font-weight: 400; opacity: .85; font-size: 11px; }
+
+
+  /* ---------- レートカレンダー ---------- */
+  .rc-row { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 10px 14px; align-items: center; }
+  .rc-row > label { font-size: 13px; font-weight: 600; }
+  .rc-row input[type=date], .rc-row input[type=text], .rc-row select { font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid #CBD2DC; border-radius: 6px; background: var(--input); min-height: 34px; }
+  .rc-row input[type=text] { width: 100%; max-width: 420px; }
+  .rc-wds { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; }
+  .rc-wds label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+  .rc-econ { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+  .rc-months { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .rc-g { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+  .rc-g .wd { text-align: center; font-size: 11px; color: var(--ink-3); padding: 2px 0; }
+  .rc-g .wd.sun { color: var(--bad); } .rc-g .wd.sat { color: #1A5FB4; }
+  .rc-d { position: relative; min-height: 50px; border-radius: 6px; background: #F6F8FB; padding: 3px 4px; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; border: 1.5px solid transparent; font-variant-numeric: tabular-nums; }
+  .rc-d:hover { border-color: var(--navy); }
+  .rc-d .n { font-size: 10.5px; color: var(--ink-3); }
+  .rc-d .n { display: flex; justify-content: space-between; gap: 2px; }
+  .rc-d .n i { font-style: normal; color: var(--bad); margin-left: 3px; margin-right: auto; }
+  .rc-d .n em { font-style: normal; font-size: 9px; white-space: nowrap; line-height: 1.5; color: var(--navy); background: rgba(255,255,255,.7); border-radius: 3px; padding: 0 2px; }
+  .rc-d.sun .n { color: var(--bad); } .rc-d.sat .n { color: #1A5FB4; }
+  .rc-d b { font-size: 14px; line-height: 1.1; color: var(--ink); text-align: right; }
+  .rc-d small { font-size: 9.5px; color: var(--ink-2); text-align: right; }
+  .rc-d.lv0 { background: #EAF1FA; } .rc-d.lv1 { background: #D3E3F5; } .rc-d.lv2 { background: #B5CFEE; }
+  .rc-d.lv3 { background: #8FB5E3; } .rc-d.lv4 { background: #6A99D6; } .rc-d.lv4 b, .rc-d.lv4 small { color: #fff; }
+  .rc-d.bk { background: #fff; border-color: var(--c); box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--c) 45%, transparent); }
+  .rc-d.unset { background: #fff; border: 1.5px dashed var(--bad); }
+  .rc-d.unset small { color: var(--bad); }
+  .rc-d.past { opacity: .5; }
+  .rc-d.pre { background: repeating-linear-gradient(135deg, #E5E5E5 0 3px, #FAFAFA 3px 6px); cursor: default; }
+  .rc-d.noted::after { content: ""; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 3px; background: #B7791F; }
+  .rc-d .ly { font-size: 9px; line-height: 1.2; color: var(--ink-3); text-align: left; white-space: nowrap; }
+  .rc-d .ly.early { color: var(--bad); font-weight: 700; }
+  .rc-d.lv4 .ly { color: #EAF1FA; }
+  .rc-pal { position: sticky; top: 0; z-index: 5; padding: 10px 14px; box-shadow: 0 4px 12px rgba(16,24,40,.08); }
+  .rk-row { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 2px 6px; }
+  .rk { flex: 0 0 auto; font: inherit; font-size: 12px; font-variant-numeric: tabular-nums; min-width: 40px; padding: 5px 4px; border-radius: 6px; border: 1.5px solid transparent; cursor: pointer; color: var(--ink); }
+  .rk.lv0 { background: #EAF1FA; } .rk.lv1 { background: #D3E3F5; } .rk.lv2 { background: #B5CFEE; } .rk.lv3 { background: #8FB5E3; } .rk.lv4 { background: #6A99D6; color: #fff; }
+  .rk.erase { background: #fff; border: 1.5px dashed var(--ink-3); }
+  .rk.on { border-color: var(--navy); box-shadow: 0 0 0 2px var(--navy); font-weight: 700; }
+  .rk-row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 4px; }
+  .rk-row2 .rc-econ { margin-top: 0; flex: 1 1 320px; min-width: 0; }
+  .rc-save { display: flex; align-items: center; gap: 6px; margin-left: auto; font-size: 13px; }
+  .rc-save.on > span { color: #B7791F; }
+  .rc-how { margin-top: 0; }
+  .rc-g .wd[data-rcwd] { cursor: pointer; border-radius: 4px; } .rc-g .wd[data-rcwd]:hover { background: #EEF2F7; }
+  #rcMonths { user-select: none; -webkit-user-select: none; touch-action: pan-y; }
+  .rc-d.pend { outline: 2px solid #B7791F; outline-offset: -1px; }
+  .rc-d.pdiff { box-shadow: inset 0 -3px 0 #B7791F; }
+  .rc-d .sub2 { overflow: hidden; display: flex; justify-content: space-between; gap: 2px; font-size: 9px; line-height: 1.2; color: var(--ink-3); white-space: nowrap; }
+  .rc-d .ly2 { display: block; font-size: 9px; line-height: 1.2; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+  .rc-d .ly2.sold { color: #6B46C1; font-weight: 700; } .rc-d .ly2 i { font-style: normal; margin-left: 1px; }
+  .rc-d.lv4 .ly2 { color: #EAF1FA; }
+  .rc-d .sub2 .chg { color: #B7791F; font-weight: 700; }
+  .rc-d .sub2 .cp.hi { color: var(--bad); font-weight: 700; } .rc-d .sub2 .cp.lo { color: #2F855A; font-weight: 700; }
+  .rc-d.lv4 .sub2, .rc-d.lv4 .sub2 span { color: #EAF1FA; }
+  .rc-sw.lv0 { background: #EAF1FA; } .rc-sw.lv2 { background: #B5CFEE; } .rc-sw.lv4 { background: #6A99D6; }
+  table.inv tr.rset td { color: var(--navy); font-weight: 600; }
+  table.inv tr.rset td small { display: block; font-weight: 400; font-size: 9.5px; color: var(--ink-3); }
+  table.inv tr.rset td.unset { background: #FFF1F0; }
+
+
+  /* ---------- 競合料金 ---------- */
+  .cp-plan { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 4px 0 10px; }
+  .cp-plan div { display: flex; flex-direction: column; } .cp-plan b { font-size: 20px; font-variant-numeric: tabular-nums; } .cp-plan span { font-size: 12px; color: var(--ink-3); }
+  .cp-dates { display: flex; flex-wrap: wrap; gap: 4px; }
+  .cp-dates span { font-size: 11.5px; padding: 2px 7px; border-radius: 999px; background: #F2F4F7; font-variant-numeric: tabular-nums; }
+  .cp-dates .k-sat { background: #E7F0FB; color: #1A5FB4; } .cp-dates .k-key { background: #FFF3D6; color: var(--warn); }
+  .cp-prompt { width: 100%; min-height: 96px; margin-top: 8px; font: 12px/1.5 ui-monospace, Menlo, monospace; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: #F6F8FB; color: var(--ink-2); }
+  a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+  .cp-add { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto auto; gap: 8px; margin-bottom: 12px; }
+  .cp-add input, .cp-add select { font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid #CBD2DC; border-radius: 6px; background: var(--input); min-height: 34px; min-width: 0; }
+  @media (max-width: 760px) { .cp-add { grid-template-columns: minmax(0, 1fr); } }
+  table.inv.comp th, table.inv.comp td { width: 52px; min-width: 52px; height: 34px; }
+  table.inv.comp .rh { width: 210px; min-width: 210px; white-space: normal; line-height: 1.3; padding: 4px 8px; }
+  table.inv.comp .rh a { color: var(--ink); text-decoration: none; }
+  table.inv.comp .rh a:hover { text-decoration: underline; }
+  table.inv.comp thead th small { display: block; font-weight: 400; font-size: 10px; }
+  table.inv.comp td { font-weight: 600; font-size: 12px; position: relative; }
+  table.inv.comp td small { display: block; font-size: 9px; font-weight: 400; color: #B7791F; }
+  table.inv.comp td i { font-style: normal; font-size: 9px; margin-left: 1px; }
+  table.inv.comp td i.up { color: var(--bad); } table.inv.comp td i.down { color: var(--good); }
+  table.inv.comp td.full { color: var(--ink-3); font-weight: 400; background: #F2F4F7; font-size: 11px; }
+  table.inv.comp td.na { color: var(--line); font-weight: 400; }
+  table.inv.comp tr.self .rh, table.inv.comp tr.self td { background: #FFF6CC; }
+  table.inv.comp tr.setrate td { color: var(--navy); }
+  table.inv.comp tr.ref .rh, table.inv.comp tr.ref td { color: var(--ink-3); }
+  table.inv.comp tr.med td, table.inv.comp tr.med .rh { background: #EEF3FA; border-top: 2px solid var(--line); }
+  table.inv.comp tr.ratio td.hi { color: var(--bad); } table.inv.comp tr.ratio td.lo { color: var(--good); }
+  table.inv.comp thead th.picked { background: var(--navy) !important; color: #fff !important; }
+  table.inv.comp th.sat { background: #E7F0FB; color: #1A5FB4; } table.inv.comp th.sun { background: #FCE9E7; color: var(--bad); }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .side { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; height: auto; padding: 10px 14px; gap: 8px; flex-direction: column; }
+    .side-controls { grid-template-columns: auto 1fr auto 1fr; align-items: center; gap: 6px; }
+    .side-controls label { margin: 0; }
+    .nav { display: flex; overflow-x: auto; gap: 2px; }
+    .nav .grp { display: none; }
+    .nav .tab { width: auto; white-space: nowrap; padding: 7px 10px; }
+    .side-foot { display: none; }
+  }
+  @media (max-width: 760px) {
+    main { padding: 16px; }
+    .side-controls { grid-template-columns: auto 1fr; }
+    .cal-pair { grid-template-columns: 1fr; }
+    .g2 { grid-template-columns: 1fr; }
+    .field { grid-template-columns: 1fr; }
+    .field > label { padding-top: 0; }
+    .mform { grid-template-columns: 1fr; }
+    .rc-row { grid-template-columns: 1fr; }
+    .rc-months { grid-template-columns: minmax(0, 1fr); }
+    .rk-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+    .rk-row2 .rc-econ { display: none; }
+    .rc-pal { padding: 8px 10px; }
+    .mform > label { padding-top: 0; }
+  }
+  /* パスコード画面 */
+  #login { display: none; position: fixed; inset: 0; z-index: 50; background: #1F2A3D; align-items: center; justify-content: center; padding: 16px; }
+  #login.on { display: flex; }
+  .login-box { width: 100%; max-width: 360px; background: #fff; border-radius: 12px; padding: 28px 24px; display: grid; gap: 10px; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+  .login-brand { font-weight: 700; font-size: 18px; color: #1F2A3D; margin-bottom: 6px; }
+  .login-box label { font-size: 13px; color: #4A5568; }
+  .login-box input { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid #CBD5E0; border-radius: 8px; }
+  .login-box input:focus { outline: 2px solid #2B6CB0; outline-offset: 1px; }
+  .login-msg { font-size: 12.5px; color: #718096; margin: 0; line-height: 1.6; }
+  .login-msg.err { color: #C53030; }
+  .role-badge { display: block; font-size: 11.5px; color: rgba(255,255,255,.7); margin-top: 6px; }
+  .role-badge a { color: #fff; }
+</style>
+
+</head>
+<body>
+  <div class="app">
+    <aside class="side" id="side">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">M</span>
+        <span>Minpaku Management<small>運営管理ダッシュボード</small></span>
+      </div>
+      <div class="side-controls">
+        <label for="property">施設</label>
+        <select id="property" aria-label="施設を選ぶ"></select>
+        <label for="asOf">基準日</label>
+        <input type="date" id="asOf" aria-label="基準日">
+      </div>
+      <nav class="nav" id="tabs" aria-label="画面の切り替え"></nav>
+      <div class="side-foot">
+        <button class="btn ghost small" id="btnReload" type="button">再読み込み</button>
+        <span id="dblink"></span>
+        <span id="roleBadge" class="role-badge"></span>
+      </div>
+    </aside>
+    <main id="content"></main>
+  </div>
+  <div class="loading" id="loading"><div class="spinner" aria-label="読み込み中"></div></div>
+  <div class="toast" id="toast" role="status"></div>
+  <script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+   * 状態
+   * ======================================================= */
+  var S = {
+    boot: null, propertyId: null, asOf: null, dash: null, tab: 'summary',
+    rateChannel: '', daily: null, measureDraft: null, confirmDel: null, rateMetric: 'shown', calFy: 'both', inferred: null, draft: null, log: null, editingId: null
+  };
+  var TABS = [
+    ['summary', 'サマリー', '分析'], ['monthly', '月次実績'], ['pnl', '収支（推計）'], ['calendar', '稼働カレンダー'], ['pickup', 'ピックアップ'],
+    ['ratecal', 'レートカレンダー', '販売'], ['plan', '料金案（来期）'], ['rates', 'レート表'], ['comp', '競合料金'], ['measures', '施策記録'], ['master', 'マスタ登録', '設定'], ['import', 'データ取込']
+  ];
+  var ICON = {
+    summary: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+    monthly: '<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    pickup: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+    pnl: '<circle cx="12" cy="12" r="9"/><path d="M8.5 7.5L12 12l3.5-4.5M12 12v5M9 13h6M9 15.5h6"/>',
+    rates: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+    master: '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/>',
+    plan: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M9 17.5l5.5-5.5 1.5 1.5-5.5 5.5H9z"/>',
+    ratecal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M10 13.5l2 2.5 2-2.5M12 16v3M10.5 17h3"/>',
+    comp: '<path d="M3 20h18"/><path d="M6 16v-5M10 16V7M14 16v-8M18 16v-3"/><circle cx="10" cy="4.5" r="1.5"/>',
+    measures: '<path d="M9 4h9a2 2 0 0 1 2 2v14l-4-3-4 3V6"/><path d="M4 8h5M4 12h5M4 16h5"/>',
+    import: '<path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>'
+  };
+  var LINE_COLORS = ['#1F3864', '#2A9D8F', '#E76F51', '#7B5EA7', '#8AB17D', '#C9184A'];
+
+  /* =========================================================
+   * サーバー呼び出し（google.script.run を Promise で包む）
+   * ======================================================= */
+  // 画面からは rpc(パスコード, 操作名, 引数) だけを呼ぶ。パスコードはこの端末に覚えておく
+  var CODE_KEY = 'mm_code';
+  function savedCode() { try { return localStorage.getItem(CODE_KEY) || ''; } catch (e) { return ''; } }
+  function storeCode(c) { try { if (c) localStorage.setItem(CODE_KEY, c); else localStorage.removeItem(CODE_KEY); } catch (e) {} }
+  function rawCall(name, args) {
+    // 外に置いた画面（GitHub Pages など）では MM_API_URL に Apps Script のURLが入っている → fetch で呼ぶ
+    if (window.MM_API_URL) {
+      return fetch(window.MM_API_URL, {
+        method: 'POST',
+        // text/plain にすると事前確認（プリフライト）が要らず、Apps Script でも受け取れる
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ code: S.code || '', name: name, args: args || [] }),
+        credentials: 'omit', // Googleのログイン情報を送らない＝会社用URLへの書き換えが起きない
+        redirect: 'follow'
+      }).then(function (r) {
+        if (!r.ok) throw new Error('サーバーにつながりませんでした（' + r.status + '）');
+        return r.json();
+      }, function () {
+        throw new Error('サーバーにつながりませんでした。通信状況を確認して、もう一度試してください。');
+      }).then(function (j) {
+        if (!j || !j.ok) throw new Error((j && j.error) || '不明なエラー');
+        return j.result;
+      });
+    }
+    return new Promise(function (resolve, reject) {
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(function (e) { reject(e); }).rpc(S.code || '', name, args);
+    });
+  }
+  function call(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    var name = String(fn).replace(/^api_/, '');
+    if (name === 'importAirhostCsv') name = 'importCsv';
+    return rawCall(name, args).catch(function (e) {
+      var m = errMsg(e);
+      if (/^AUTH/.test(m) || /AUTH:/.test(m)) { storeCode(''); S.code = ''; showLogin(m.replace(/^.*?AUTH(_SETUP)?:\s*/, '')); }
+      throw e;
+    });
+  }
+  function showLogin(msg) {
+    var el = $('login');
+    if (!el) { el = document.createElement('div'); el.id = 'login'; document.body.appendChild(el); }
+    el.innerHTML = '<form class="login-box" id="loginForm"><div class="login-brand">Minpaku Management</div>' +
+      '<label for="loginCode">パスコード</label><input id="loginCode" type="password" autocomplete="current-password" required>' +
+      '<p class="login-msg">' + esc(msg || '管理者から伝えられたパスコードを入れてください。この端末では次回から入力不要です。') + '</p>' +
+      '<button class="btn primary" type="submit">開く</button></form>';
+    el.className = 'on';
+    busy(false);
+    $('loginCode').focus();
+    $('loginForm').onsubmit = function (ev) {
+      ev.preventDefault();
+      var c = $('loginCode').value.trim(); if (!c) return;
+      S.code = c; busy(true);
+      rawCall('whoami', []).then(function (r) {
+        S.role = r.role; storeCode(c); el.className = ''; applyRole(); boot();
+      }).catch(function (e) {
+        busy(false); S.code = '';
+        var m = errMsg(e).replace(/^.*?AUTH(_SETUP)?:\s*/, '');
+        el.querySelector('.login-msg').textContent = m; el.querySelector('.login-msg').classList.add('err');
+      });
+    };
+  }
+  function applyRole() {
+    var b = $('roleBadge');
+    if (b) b.innerHTML = window.MM_NO_AUTH ? '' : (S.role === 'edit' ? '編集できます' : '閲覧のみ') + ' ・ <a href="#" id="logout">パスコードを変える</a>';
+    var lo = $('logout'); if (lo) lo.onclick = function (ev) { ev.preventDefault(); storeCode(''); S.code = ''; S.role = ''; showLogin(); };
+  }
+  function start() {
+    if (window.MM_NO_AUTH) { S.role = 'edit'; return boot(); }
+    S.code = savedCode();
+    if (!S.code) return showLogin();
+    busy(true);
+    rawCall('whoami', []).then(function (r) { S.role = r.role; applyRole(); boot(); })
+      .catch(function (e) { storeCode(''); S.code = ''; showLogin(errMsg(e).replace(/^.*?AUTH(_SETUP)?:\s*/, '')); });
+  }
+
+  /* =========================================================
+   * 表示用の小道具
+   * ======================================================= */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function yen(n) { return n === null || n === undefined || isNaN(n) ? '—' : Math.round(n).toLocaleString('ja-JP'); }
+  function man(n) { return n === null || n === undefined || isNaN(n) ? '—' : (Math.round(n / 1000) / 10).toLocaleString('ja-JP', { minimumFractionDigits: 1 }) + '万'; }
+  function pct(x, d) { return x === null || x === undefined || isNaN(x) ? '—' : (x * 100).toFixed(d === undefined ? 1 : d) + '%'; }
+  function pt(x) { if (x === null || x === undefined || isNaN(x)) return '—'; var v = x * 100; return (v > 0 ? '+' : '') + v.toFixed(1) + 'pt'; }
+  function ratio(a, b) { return a && b ? a / b : null; }
+  function signed(n) { if (n === null || n === undefined) return '—'; return (n > 0 ? '+' : '') + n; }
+  function mlabel(ym) { return (+ym.slice(5, 7)) + '月'; }
+  function ymlabel(ym) { return ym.slice(0, 4) + '年' + (+ym.slice(5, 7)) + '月'; }
+  function chip(n, unit) {
+    if (n === null || n === undefined) return '<span class="chip flat">—</span>';
+    var cls = n > 0 ? 'up' : n < 0 ? 'down' : 'flat';
+    return '<span class="chip ' + cls + '">' + (n > 0 ? '+' : '') + n + (unit || '') + '</span>';
+  }
+  function chColor(ch) { var c = S.dash && S.dash.channelColors[ch]; return c ? c.color : '#D9D9D9'; }
+  function busy(on) { $('loading').classList.toggle('on', !!on); }
+  var toastTimer;
+  function toast(msg, kind) {
+    var t = $('toast'); t.textContent = msg; t.className = 'toast on ' + (kind || '');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.className = 'toast'; }, kind === 'err' ? 9000 : 4000);
+  }
+  function errMsg(e) { return (e && (e.message || e.toString())) || '不明なエラー'; }
+  function table(head, rows, opts) {
+    opts = opts || {};
+    var h = '<div class="tbl-wrap"><table' + (opts.id ? ' id="' + opts.id + '"' : '') + '><thead><tr>' +
+      head.map(function (c) { return '<th class="' + (c.cls || '') + '">' + c.t + '</th>'; }).join('') + '</tr></thead><tbody>';
+    h += rows.join('') + '</tbody></table></div>';
+    return h;
+  }
+  function isFutureMonth(ym) { return ym > S.asOf.slice(0, 7); }
+
+  /* =========================================================
+   * 起動
+   * ======================================================= */
+  function renderTabs() {
+    $('tabs').innerHTML = TABS.map(function (t) {
+      return (t[2] ? '<div class="grp">' + t[2] + '</div>' : '') +
+        '<button class="tab' + (S.tab === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '"' + (S.tab === t[0] ? ' aria-current="page"' : '') + '>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[t[0]] + '</svg><span>' + t[1] + '</span></button>';
+    }).join('');
+  }
+  function renderPropertySelect() {
+    var sel = $('property'), ps = S.boot.properties;
+    sel.innerHTML = ps.length
+      ? ps.map(function (p) { return '<option value="' + esc(p.id) + '"' + (p.id === S.propertyId ? ' selected' : '') + '>' + esc(p.name) + (p.status === '要確認' ? '（要確認）' : '') + '</option>'; }).join('')
+      : '<option value="">施設がありません</option>';
+  }
+  function boot() {
+    busy(true);
+    return call('api_bootstrap').then(function (b) {
+      S.boot = b;
+      if (!S.asOf) S.asOf = b.today;
+      $('asOf').value = S.asOf;
+      if (!S.propertyId || !b.properties.some(function (p) { return p.id === S.propertyId; })) S.propertyId = b.properties.length ? b.properties[0].id : null;
+      renderPropertySelect();
+      $('dblink').innerHTML = b.dbUrl && /^https:/.test(b.dbUrl) ? '<a href="' + esc(b.dbUrl) + '" target="_blank" rel="noopener" style="color:#fff;opacity:.7;font-size:12px">DBを開く</a>' : '';
+      if (!S.propertyId) { S.tab = 'import'; S.dash = null; renderTabs(); render(); busy(false); return; }
+      return load();
+    }).catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+  }
+  function load() {
+    if (!S.propertyId) return Promise.resolve();
+    busy(true);
+    return call('api_dashboard', S.propertyId, S.asOf).then(function (d) {
+      S.dash = d; S.daily = null; S.draft = null; S.inferred = null; S.editingId = null; S.confirmDel = null; busy(false); render();
+    }).catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+  }
+  function render() {
+    renderTabs();
+    var el = $('content');
+    if (!S.dash && S.tab !== 'import' && S.tab !== 'master') { el.innerHTML = '<div class="card"><p class="empty">まだ施設がありません。「データ取込」からAirHostの予約データCSVを入れると、物件が自動で登録されます。</p></div>'; return; }
+    var f = { summary: vSummary, monthly: vMonthly, calendar: vCalendar, pickup: vPickup, pnl: vPnl, rates: vRates, ratecal: vRateCal, plan: vPlan, comp: vComp, measures: vMeasures, master: vMaster, import: vImport }[S.tab];
+    el.innerHTML = f();
+    if (S.tab === 'measures') wireMeasures();
+    if (S.tab === 'ratecal' || S.tab === 'plan') wireRateCal();
+    if (S.tab === 'comp') wireComp();
+    if (S.tab === 'pickup') wirePickup();
+    if (S.tab === 'import') wireImport();
+    if (S.tab === 'master') wireMaster();
+  }
+  function head(title, extra) {
+    var d = S.dash, m = d ? d.master : null;
+    return '<div class="page-head"><h1>' + title + '</h1><span class="meta">' +
+      (m ? esc(m.name) + '　｜　基準日 ' + esc(S.asOf) + '　｜　FY' + d.fy + '（' + d.fy + '年' + (m.fyStartMonth || 4) + '月〜）' : '') +
+      '</span>' + (extra || '') + '</div>';
+  }
+
+  /* =========================================================
+   * サマリー
+   * ======================================================= */
+  function vSummary() {
+    var d = S.dash, cur = d.kpi.current, pnl = d.pnl.current.total;
+    var al = d.alerts.length
+      ? '<ul class="alerts">' + d.alerts.map(function (a) { return '<li class="' + a.level + '">' + esc(a.text) + '</li>'; }).join('') + '</ul>'
+      : '<p class="empty">気になる動きはありません。</p>';
+    var cards = d.forward.map(function (f, i) {
+      var ly = f.lastYear, lyOcc = ly && ly.nights ? ly.occ : null;
+      var open = d.master.openDate, lyPre = open && ly && (ly.month + '-31') < open;
+      return '<div class="kpi"><div class="label"><b style="color:var(--ink)">' + ymlabel(f.month) + '</b>' + (i === 0 ? '<span class="chip future">当月</span>' : '') + '</div>' +
+        '<div class="big num">' + pct(f.occ) + '<small>' + f.nights + '/' + f.capacity + '泊</small></div>' +
+        '<div class="bar"><i style="width:' + Math.min(100, f.occ * 100) + '%"></i>' + (lyOcc !== null ? '<b style="left:' + Math.min(100, lyOcc * 100) + '%" title="前年同月"></b>' : '') + '</div>' +
+        '<div class="rows"><span>前週から</span><span>' + chip(f.diff1w, '泊') + '</span>' +
+        '<span>4週間で</span><span>' + chip(f.diff4w, '泊') + '</span>' +
+        '<span>ADR（清掃込）</span><span>' + yen(f.adr) + '</span>' +
+        '<span>RevPAR</span><span>' + yen(f.revpar) + '</span>' +
+        '<span>前年同月</span><span>' + (lyOcc === null ? '<span class="muted">' + (lyPre ? '開業前' : '0泊') + '</span>' : pct(lyOcc) + '・' + ly.nights + '泊') + '</span></div></div>';
+    }).join('');
+    var fyCards = [
+      ['FY' + d.fy + ' 販売額（受注済み）', man(cur.total.sale) + '円', cur.total.nights + '泊・稼働' + pct(cur.total.occ)],
+      ['ADR（清掃費込み）', yen(cur.total.adr) + '円', '素泊単価 ' + yen(cur.total.adrLodging) + '円'],
+      ['RevPAR', yen(cur.total.revpar) + '円', '前年度 ' + yen(d.kpi.previous.total.revpar) + '円'],
+      ['オーナー手残り（推計）', man(pnl.contribution) + '円', '1泊 ' + yen(pnl.perNight) + '円・運営会社の管理手数料 ' + man(pnl.sb) + '円']
+    ];
+    var cap = +d.master.annualCap;
+    if (cap && cap < 365) {
+      var used = cur.total.nights;
+      fyCards.unshift(['営業日数（年' + cap + '日上限）', used + '<small>/' + cap + '日</small>', '残り ' + Math.max(0, cap - used) + '日・' + (used / cap * 100).toFixed(0) + '%消化（受注済み含む）']);
+    }
+    var fyGrid = fyCards.length === 5 ? 'g5' : 'g4';
+    fyCards = fyCards.map(function (c) { return '<div class="kpi"><div class="label">' + c[0] + '</div><div class="big num">' + c[1] + '</div><div class="rows" style="grid-template-columns:1fr"><span style="text-align:left;color:var(--ink-2)">' + c[2] + '</span></div></div>'; }).join('');
+    var recent = (d.measures || []).slice(0, 3);
+    var ms = recent.length ? '<div class="card"><h2>最近の施策</h2><ul class="mlist">' + recent.map(function (m) { return '<li><span class="muted">' + esc(m.date) + '</span><b>' + esc(m.title) + '</b>' + (m.effect && m.effect.after ? '<span>実施後' + m.effect.elapsed + '日で ' + m.effect.after.nights + '泊（実施前14日 ' + m.effect.before.nights + '泊）</span>' : '') + '</li>'; }).join('') + '</ul></div>' : '';
+    return head('サマリー') +
+      '<div class="card"><h2>気になる動き</h2><p class="sub">受注ゼロの月、前週からの減少、4週間動いていない月を自動で拾います。</p>' + al + '</div>' +
+      '<div class="grid ' + fyGrid + '" style="margin-bottom:16px">' + fyCards + '</div>' +
+      '<div class="card"><h2>この先6ヶ月の稼働状況</h2><p class="sub">基準日時点で押さえている泊数。バーの縦線は前年同月の稼働率です。</p><div class="grid g6">' + cards + '</div></div>' + ms;
+  }
+
+  /* =========================================================
+   * 月次実績（横＝月、縦＝指標×年度）
+   * ======================================================= */
+  function vMonthly() {
+    var d = S.dash, cur = d.kpi.current, prev = d.kpi.previous;
+    var months = cur.months.map(function (m) { return m.month; });
+    var hd = [{ t: '指標' }, { t: '年度' }].concat(months.map(function (m) { return { t: mlabel(m), cls: 'n' + (isFutureMonth(m) ? ' future' : '') }; })).concat([{ t: '年度計', cls: 'n' }]);
+    // 年度計の前年比は「両年度とも実績がある月」だけで比べる（開業初年度などで年度計どうしを比べると過大に出るため）
+    function agg(list) {
+      var a = { nights: 0, sale: 0, lodging: 0, capacity: 0 };
+      list.forEach(function (x) { a.nights += x.nights; a.sale += x.sale; a.lodging += x.lodging; a.capacity += x.capacity; });
+      a.occ = a.capacity ? a.nights / a.capacity : 0; a.adr = a.nights ? a.sale / a.nights : null;
+      a.adrLodging = a.nights ? a.lodging / a.nights : null; a.revpar = a.capacity ? a.sale / a.capacity : 0;
+      return a;
+    }
+    var both = cur.months.map(function (x, i) { return x.nights > 0 && prev.months[i].nights > 0; });
+    var ovCur = agg(cur.months.filter(function (x, i) { return both[i]; }));
+    var ovPrev = agg(prev.months.filter(function (x, i) { return both[i]; }));
+    var ovN = both.filter(Boolean).length;
+    function rowsFor(label, get, fmtFn, cmp) {
+      var all = cur.months.concat([cur.total]), allP = prev.months.concat([prev.total]);
+      var r1 = '<tr><td class="lbl" rowspan="3">' + label + '</td><td class="fy-now">FY' + d.fy + '</td>' + all.map(function (x, i) { return '<td class="n' + (i < 12 && isFutureMonth(x.month) ? ' future' : '') + '">' + (x.nights || get(x) ? fmtFn(get(x)) : '') + '</td>'; }).join('') + '</tr>';
+      var r2 = '<tr class="prev"><td class="fy-prev">FY' + (d.fy - 1) + '</td>' + allP.map(function (x) { return '<td class="n">' + (x.nights || get(x) ? fmtFn(get(x)) : '') + '</td>'; }).join('') + '</tr>';
+      var r3 = '<tr class="diff"><td class="fy-diff">' + (cmp === 'pt' ? '差' : '前年比') + '</td>' + all.map(function (x, i) {
+        if (i === 12) { x = ovCur; allP = allP.slice(0, 12).concat([ovPrev]); }
+        var a = get(x), b = get(allP[i]);
+        if (!x.nights && !a) return '<td class="n"></td>';
+        if (!allP[i].nights && !b) return '<td class="n"></td>';
+        return '<td class="n">' + (cmp === 'pt' ? pt(a - b) : pct(ratio(a, b), 0)) + '</td>';
+      }).join('') + '</tr>';
+      return r1 + r2 + r3;
+    }
+    var body = [
+      rowsFor('販売額', function (x) { return x.sale; }, yen),
+      rowsFor('泊数', function (x) { return x.nights; }, function (v) { return v; }),
+      rowsFor('稼働率', function (x) { return x.occ; }, function (v) { return pct(v); }, 'pt'),
+      rowsFor('ADR（清掃費込み）', function (x) { return x.adr; }, yen),
+      rowsFor('素泊単価', function (x) { return x.adrLodging; }, yen),
+      rowsFor('RevPAR', function (x) { return x.revpar; }, yen)
+    ];
+    var chans = {};
+    cur.months.concat(prev.months).forEach(function (m) { Object.keys(m.byChannel).forEach(function (k) { chans[k] = true; }); });
+    var chRows = Object.keys(chans).map(function (ch) {
+      var all = cur.months.concat([cur.total]);
+      return '<tr><td class="lbl"><span class="sw" style="background:' + chColor(ch) + '"></span>' + esc(ch) + '</td><td>販売額</td>' + all.map(function (x) { var c = x.byChannel[ch]; return '<td class="n">' + (c ? yen(c.sale) : '') + '</td>'; }).join('') + '</tr>' +
+        '<tr><td class="lbl"></td><td>泊数</td>' + all.map(function (x) { var c = x.byChannel[ch]; return '<td class="n">' + (c ? c.nights : '') + '</td>'; }).join('') + '</tr>' +
+        '<tr><td class="lbl"></td><td>ADR（清掃費込み）</td>' + all.map(function (x) { var c = x.byChannel[ch]; return '<td class="n">' + (c ? yen(c.adr) : '') + '</td>'; }).join('') + '</tr>' +
+        '<tr><td class="lbl"></td><td>素泊単価</td>' + all.map(function (x) { var c = x.byChannel[ch]; return '<td class="n">' + (c ? yen(c.adrLodging) : '') + '</td>'; }).join('') + '</tr>' +
+        '<tr class="diff"><td class="lbl"></td><td>構成比</td>' + all.map(function (x) { var c = x.byChannel[ch]; return '<td class="n">' + (c ? pct(c.share, 0) : '') + '</td>'; }).join('') + '</tr>';
+    });
+    return head('月次実績') +
+      '<div class="note">宿泊日ベース（連泊は1泊ずつに均等に按分）。<b>ADR</b>＝販売額÷泊数で、ゲストが払った清掃費も含みます（1泊予約が多い月ほど高く出ます）。<b>素泊単価</b>＝清掃費を除いた1泊の宿泊料で、レート表のBaseと同じ物差しです。値付けの判断には素泊単価を見てください。斜線の列は基準日より先の月（先行予約）です。</div>' +
+      '<div class="card"><h2>全体</h2><p class="sub">年度計の前年比・差は、両年度とも実績がある月（' + ovN + 'ヶ月）だけで比べています。</p>' + table(hd, body) + '</div>' +
+      '<div class="card"><h2>チャネル別（FY' + d.fy + '）</h2>' + table([{ t: 'チャネル' }, { t: '' }].concat(hd.slice(2)), chRows) + '</div>';
+  }
+
+  /* =========================================================
+   * 稼働カレンダー
+   * ======================================================= */
+  function calBox(c) {
+    var wd = ['日', '月', '火', '水', '木', '金', '土'];
+    var first = c.days[0].wd, cells = wd.map(function (w, i) { return '<div class="wd' + (i === 0 ? ' sun' : i === 6 ? ' sat' : '') + '">' + w + '</div>'; });
+    for (var i = 0; i < first; i++) cells.push('<div></div>');
+    c.days.forEach(function (x) {
+      var cls = [x.hol || x.wd === 0 ? 'sun' : x.wd === 6 ? 'sat' : '', x.channel && x.future ? 'fut' : '', x.beforeOpen ? 'pre' : ''].join(' ');
+      var st = x.channel ? ' style="background:' + chColor(x.channel) + ';color:var(--ink)"' : '';
+      var tip = x.channel ? ' title="' + esc(x.date + '　' + x.channel + '　' + yen(x.price) + '円') + '"' : '';
+      cells.push('<div class="' + cls + '"' + st + tip + '>' + x.day + '</div>');
+    });
+    return '<div class="cal' + (c.preOpen ? ' preopen' : '') + '"><div class="cal-h">' + ymlabel(c.month) +
+      '<span>' + (c.preOpen ? '開業前' : c.booked + '/' + c.capacity + '泊（' + pct(c.occ) + '）') + '</span></div><div class="cal-g">' + cells.join('') + '</div></div>';
+  }
+  function vCalendar() {
+    var d = S.dash, cur = d.calendar.current, prev = d.calendar.previous, next = d.calendar.next;
+    if (S.calFy === 'next' && !next) S.calFy = 'both';
+    var legend = '<div class="cal-legend">' + Object.keys(d.channelColors).map(function (k) { return '<span><span class="sw" style="background:' + d.channelColors[k].color + '"></span>' + esc(k) + '</span>'; }).join('') +
+      '<span><span class="sw" style="background:#fff"></span>空室</span><span><b><i>太字斜体</i></b>＝これから迎える予約</span><span><span class="sw" style="background:repeating-linear-gradient(135deg,#E5E5E5 0 3px,#FAFAFA 3px 6px)"></span>開業前</span></div>';
+    var seg = '<div class="seg" id="calSeg">' + [['both', '前年と並べる'], ['now', 'FY' + d.fy + 'だけ']].concat(next ? [['next', 'FY' + (d.fy + 1) + '（来年度）']] : []).map(function (o) { return '<button data-cal="' + o[0] + '" class="' + (S.calFy === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>';
+    var body = '';
+    if (S.calFy === 'next') {
+      body = '<div class="cal-pair"><div class="cal-col-h">◀ FY' + d.fy + '（今年度）</div><div class="cal-col-h">▶ FY' + (d.fy + 1) + '（来年度）</div></div>' +
+        cur.map(function (c, i) { return '<div class="cal-pair">' + calBox(c) + calBox(next[i]) + '</div>'; }).join('');
+    } else if (S.calFy === 'both') {
+      body = '<div class="cal-pair"><div class="cal-col-h">◀ FY' + (d.fy - 1) + '（前年）</div><div class="cal-col-h">▶ FY' + d.fy + '（今年度）</div></div>' +
+        cur.map(function (c, i) { return '<div class="cal-pair">' + calBox(prev[i]) + calBox(c) + '</div>'; }).join('');
+    } else {
+      body = '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">' + cur.map(calBox).join('') + '</div>';
+    }
+    var note = '<div class="note">年度（' + (d.master.fyStartMonth || 4) + '月始まり）で表示します。来年度（FY' + (d.fy + 1) + '）は、その期間に予約が1件でも入ると自動で切り替えボタンが出ます' + (next ? '。<b>今、来年度の予約が入っています。</b>' : '（今はまだ入っていません）。') + '基準日を来年度に動かすと、そちらが今年度になります。</div>';
+    return head('稼働カレンダー', seg) + note + '<div class="card">' + legend + body + '</div>';
+  }
+
+  /* =========================================================
+   * ピックアップ（在庫表：いつ入ったか／前年同日はこの時点で入っていたか）
+   * ======================================================= */
+  function dayDiff(a, b) { return Math.round((Date.UTC(+b.slice(0, 4), +b.slice(5, 7) - 1, +b.slice(8, 10)) - Date.UTC(+a.slice(0, 4), +a.slice(5, 7) - 1, +a.slice(8, 10))) / 86400000); }
+  function md(ds) { return ds ? (+ds.slice(5, 7)) + '/' + (+ds.slice(8, 10)) : ''; }
+  function lineChart(labels, series, marks) {
+    var W = 860, H = 250, L = 34, R = 12, T = 18, B = 28, w = W - L - R, h = H - T - B;
+    var max = 1;
+    series.forEach(function (s) { s.values.forEach(function (v) { if (v > max) max = v; }); });
+    max = Math.ceil(max / 5) * 5;
+    function x(i) { return L + (labels.length < 2 ? w / 2 : i * w / (labels.length - 1)); }
+    function y(v) { return T + h - v / max * h; }
+    var g = '';
+    for (var k = 0; k <= 5; k++) { var vv = max * k / 5; g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(vv) + '" y2="' + y(vv) + '" stroke="#EEF1F5"/><text x="' + (L - 6) + '" y="' + (y(vv) + 4) + '" text-anchor="end">' + vv + '</text>'; }
+    var step = Math.max(1, Math.ceil(labels.length / 9)), lastIdx = labels.length - 1;
+    labels.forEach(function (lb, i) { if ((i % step === 0 && lastIdx - i >= step / 2) || i === lastIdx) g += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(lb.slice(5)) + '</text>'; });
+    (marks || []).forEach(function (mk, n) {
+      var fi = dayDiff(labels[0], mk.date) / 7;
+      if (fi < 0 || fi > lastIdx) return;
+      var xx = L + fi * w / Math.max(1, lastIdx);
+      g += '<line x1="' + xx + '" x2="' + xx + '" y1="' + T + '" y2="' + (T + h) + '" stroke="#B7791F" stroke-dasharray="3 3"/>' +
+        '<g><title>' + esc(mk.date + '　' + mk.title) + '</title><circle cx="' + xx + '" cy="' + (T - 7) + '" r="7" fill="#B7791F"/><text x="' + xx + '" y="' + (T - 3.5) + '" text-anchor="middle" style="fill:#fff;font-size:10px;font-weight:700">' + (n + 1) + '</text></g>';
+    });
+    series.forEach(function (s) {
+      var p = s.values.map(function (v, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
+      var allZero = s.values.every(function (v) { return v === 0; });
+      g += '<path d="' + p + '" fill="none" stroke="' + s.color + '" stroke-width="2.2" stroke-linejoin="round"' + (allZero ? ' stroke-dasharray="6 5"' : '') + '/>';
+      var last = s.values.length - 1;
+      g += '<circle cx="' + x(last) + '" cy="' + y(s.values[last]) + '" r="3.5" fill="' + s.color + '"/>';
+    });
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="月別の受注泊数の推移">' + g + '</svg>';
+  }
+  function invGrid(dp, measures) {
+    var days = dp.days, wdn = ['日', '月', '火', '水', '木', '金', '土'];
+    function wdc(w, hol) { return hol || w === 0 ? ' sun' : w === 6 ? ' sat' : ''; }
+    var months = [], cur = null;
+    days.forEach(function (x) { var m = x.date.slice(0, 7); if (!cur || cur.m !== m) { cur = { m: m, n: 0 }; months.push(cur); } cur.n++; });
+    var mstart = {}; months.forEach(function (m) { mstart[m.m] = true; });
+    function edge(x) { return x.date.slice(8) === '01' ? ' mstart' : ''; }
+    var r0 = '<tr class="mh"><th class="rh">宿泊日</th>' + months.map(function (m) { return '<th colspan="' + m.n + '" class="mstart">' + ymlabel(m.m) + '</th>'; }).join('') + '</tr>';
+    var r1 = '<tr><th class="rh">日</th>' + days.map(function (x) { return '<th class="d' + wdc(x.wd, x.hol) + edge(x) + (x.date === S.asOf ? ' today' : '') + '"' + (x.hol ? ' title="祝日"' : '') + '>' + (+x.date.slice(8)) + '</th>'; }).join('') + '</tr>';
+    var r2 = '<tr><th class="rh">曜日</th>' + days.map(function (x) { return '<th class="w' + wdc(x.wd, x.hol) + edge(x) + '">' + (x.hol ? '祝' : wdn[x.wd]) + '</th>'; }).join('') + '</tr>';
+    function bookCell(info, cls, x, extraTitle) {
+      if (!info) return '<td class="' + cls + edge(x) + '"></td>';
+      var tip = esc(x.date + '　' + info.channel + '　予約日 ' + info.bookedAt + '（' + info.lead + '日前）　素泊 ' + yen(info.perNight) + '円' + (extraTitle || ''));
+      return '<td class="bk ' + cls + edge(x) + (info.first ? ' first' : '') + '" style="--c:' + chColor(info.channel) + '" title="' + tip + '">' + (info.first ? md(info.bookedAt) : '') + '</td>';
+    }
+    var rNow = '<tr class="now"><th class="rh">今年<small>基準日 ' + md(dp.asOf) + ' 時点</small></th>' + days.map(function (x) { return bookCell(x.now, x.past ? 'past' : '', x); }).join('') + '</tr>';
+    var rLead = '<tr class="sub"><th class="rh">リードタイム</th>' + days.map(function (x) { return '<td class="' + edge(x) + '">' + (x.now && x.now.first ? x.now.lead : '') + '</td>'; }).join('') + '</tr>';
+    var rRate = '<tr class="sub"><th class="rh">素泊単価</th>' + days.map(function (x) { return '<td class="' + edge(x) + '">' + (x.now ? (x.now.perNight / 10000).toFixed(1) : '') + '</td>'; }).join('') + '</tr>';
+    var rSet = '<tr class="sub rset"><th class="rh">設定レート<small>レートカレンダー</small></th>' + days.map(function (x) { return '<td class="' + edge(x) + (x.rate || x.now ? '' : (x.past ? '' : ' unset')) + '">' + (x.rate ? (x.rate / 10000).toFixed(1) + (x.minStay > 1 ? '<small>' + x.minStay + '泊〜</small>' : '') : '') + '</td>'; }).join('') + '</tr>';
+    var rLy = '<tr class="ly"><th class="rh">前年' + (dp.align === 'weekday' ? '同曜日' : '同日') + '<small>' + esc(dp.asOfLy.slice(0, 4)) + '/' + md(dp.asOfLy) + ' 時点</small></th>' + days.map(function (x) {
+      if (x.lyState === 'booked') return bookCell(x.lyInfo, 'lyb', x, '　→ 前年の同じ時点で予約済み');
+      if (x.lyState === 'later') {
+        var i = x.lyInfo;
+        return '<td class="lyl' + edge(x) + (i.first ? ' first' : '') + '" style="--c:' + chColor(i.channel) + '" title="' + esc(x.ly + '　' + i.channel + '　予約日 ' + i.bookedAt + '（' + i.lead + '日前）→ 前年のこの時点ではまだ空き') + '">' + (i.first ? md(i.bookedAt) : '') + '</td>';
+      }
+      if (x.lyState === 'preopen') return '<td class="pre' + edge(x) + '"></td>';
+      return '<td class="' + edge(x) + '"></td>';
+    }).join('') + '</tr>';
+    var rLyD = '<tr class="lyd"><th class="rh">前年の日付</th>' + days.map(function (x) { return '<td class="' + wdc(x.lyWd, x.lyHol).trim() + edge(x) + '"' + (x.lyHol ? ' title="祝日"' : '') + '>' + md(x.ly) + '<small>' + (x.lyHol ? '祝' : wdn[x.lyWd]) + '</small></td>'; }).join('') + '</tr>';
+    var rM = '';
+    if (measures.length) {
+      rM = '<tr class="ms"><th class="rh">施策（対象日）</th>' + days.map(function (x) {
+        var hit = measures.filter(function (m) { return (m.stayFrom || m.stayTo) && (!m.stayFrom || x.date >= m.stayFrom) && (!m.stayTo || x.date <= m.stayTo); });
+        return '<td class="' + edge(x) + '"' + (hit.length ? ' title="' + esc(hit.map(function (m) { return m.title; }).join(' / ')) + '"' : '') + '>' + (hit.length ? '<i></i>' : '') + '</td>';
+      }).join('') + '</tr>';
+    }
+    return '<div class="inv-wrap" id="invWrap"><table class="inv"><thead>' + r0 + r1 + r2 + '</thead><tbody>' + rNow + rLead + rRate + rSet + rLy + rLyD + rM + '</tbody></table></div>';
+  }
+  function vPickup() {
+    var d = S.dash, p = d.pickup, months = p.months, dp = S.daily || d.daily;
+    var opts = [], start = (d.master.openDate || S.asOf).slice(0, 7);
+    var endM = S.asOf.slice(0, 7), y = +endM.slice(0, 4), mo = +endM.slice(5, 7) + 12;
+    var lastM = (y + Math.floor((mo - 1) / 12)) + '-' + ('0' + (((mo - 1) % 12) + 1)).slice(-2);
+    for (var mm = start; mm <= lastM;) { opts.push(mm); var yy = +mm.slice(0, 4), m2 = +mm.slice(5, 7) + 1; mm = m2 > 12 ? (yy + 1) + '-01' : yy + '-' + ('0' + m2).slice(-2); }
+    var fromM = dp.from.slice(0, 7);
+    var ctrl = '<div class="toolbar"><label class="muted" for="dailyFrom" style="font-size:12px">表示する月</label><select id="dailyFrom">' + opts.map(function (o) { return '<option value="' + o + '"' + (o === fromM ? ' selected' : '') + '>' + ymlabel(o) + 'から6ヶ月</option>'; }).join('') + '</select>' +
+      '<div class="seg">' + [['weekday', '前年同曜日と比べる'], ['date', '前年同日と比べる']].map(function (o) { return '<button data-align="' + o[0] + '" class="' + (dp.align === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>';
+    var pace = table([{ t: '月' }, { t: '今年（基準日時点）', cls: 'n' }, { t: '前年の同じ時点', cls: 'n' }, { t: '差', cls: 'n' }, { t: '前年の最終', cls: 'n' }, { t: '前年の最終まで あと', cls: 'n' }],
+      dp.months.map(function (x) {
+        var pre = x.preopen === x.days;
+        return '<tr><td>' + ymlabel(x.month) + '</td><td class="n"><b>' + x.now + '</b>/' + x.days + '泊</td><td class="n">' + (pre ? '<span class="muted">開業前</span>' : x.lyAt + '泊') + '</td><td class="n">' + (pre ? '' : chip(x.now - x.lyAt, '泊')) + '</td><td class="n">' + (pre ? '' : x.lyFinal + '泊') + '</td><td class="n">' + (pre ? '' : Math.max(0, x.lyFinal - x.now) + '泊') + '</td></tr>';
+      }));
+    var legend = '<div class="cal-legend">' + Object.keys(d.channelColors).map(function (k) { return '<span><span class="sw" style="background:' + d.channelColors[k].color + '"></span>' + esc(k) + '</span>'; }).join('') +
+      '<span><span class="sw lyl-sw"></span>前年はこの時点では空き（後から入った）</span><span><span class="sw pre-sw"></span>開業前</span><span>セルの数字＝予約が入った日（月/日）</span></div>';
+    var marks = (d.measures || []).filter(function (m) { return m.date; }).slice().reverse();
+    var series = months.map(function (m, i) { return { name: ymlabel(m), color: LINE_COLORS[i % LINE_COLORS.length], values: p.rows.map(function (r) { return r.byMonth[m]; }) }; });
+    var chart = lineChart(p.rows.map(function (r) { return r.asOf; }), series, marks) +
+      '<div class="legend-row">' + series.map(function (s) { return '<span><i style="background:' + s.color + '"></i>' + s.name + '</span>'; }).join('') + '<span class="muted">点線＝ずっと0泊の月</span>' +
+      (marks.length ? '<span><b style="display:inline-block;width:14px;height:14px;border-radius:7px;background:#B7791F;vertical-align:-2px;margin-right:4px"></b>施策の実施日（番号は古い順）</span>' : '') + '</div>';
+    var ev = d.events.length ? table(
+      [{ t: '日付' }, { t: '動き' }, { t: '宿泊日' }, { t: '泊数', cls: 'n' }, { t: 'チャネル' }, { t: '素泊/泊', cls: 'n' }, { t: 'リードタイム', cls: 'n' }],
+      d.events.slice(0, 30).map(function (e) {
+        return '<tr><td>' + esc(e.date) + '</td><td>' + (e.type === 'キャンセル' ? '<b style="color:var(--bad)">キャンセル</b>' : '予約' + (e.laterCancelled ? '<span class="muted">（後にキャンセル）</span>' : '')) + '</td><td>' + esc(e.checkIn) + '</td><td class="n">' + e.nights + '</td><td><span class="sw" style="background:' + chColor(e.channel) + '"></span>' + esc(e.channel) + '</td><td class="n">' + yen(e.perNight) + '</td><td class="n">' + e.lead + '日</td></tr>';
+      })) : '<p class="empty">直近4週間に予約・キャンセルの動きはありません。</p>';
+    var hd = [{ t: '時点' }].concat(months.map(function (m) { return { t: ymlabel(m), cls: 'n' }; })).concat([{ t: '合計', cls: 'n' }, { t: '前週差', cls: 'n' }]);
+    var rows = p.rows.slice().reverse().map(function (r) {
+      return '<tr><td>' + esc(r.asOf) + '</td>' + months.map(function (m) {
+        var df = r.diffByMonth[m];
+        return '<td class="n' + (df < 0 ? ' neg' : df > 0 ? ' pos' : '') + '">' + r.byMonth[m] + (df ? ' <span style="font-weight:400;font-size:11px">(' + signed(df) + ')</span>' : '') + '</td>';
+      }).join('') + '<td class="n"><b>' + r.total + '</b></td><td class="n' + (r.diff < 0 ? ' neg' : r.diff > 0 ? ' pos' : '') + '">' + signed(r.diff) + '</td></tr>';
+    });
+    return head('ピックアップ') +
+      '<div class="note"><b>稼働カレンダー</b>は「どこが埋まっているか」、<b>ピックアップ</b>は「いつ入ったか」を見る表です。予約日とキャンセル日から各時点の状態を再現しているので、記録作業は要りません。来年からは、前年の同じ時点でどの日が埋まっていたかと並べて比べられます。</div>' +
+      ctrl +
+      '<div class="card"><h2>日別の予約状況（在庫表）</h2><p class="sub">横にスクロールできます。上段＝今年、下段＝前年の同じ時点。色付き＝その時点で予約済み、斜線＝前年はまだ空きでその後に入った日。</p>' + legend + invGrid(dp, d.measures || []) + '</div>' +
+      '<div class="card"><h2>前年同時点との比較（月別）</h2><p class="sub">「前年の同じ時点」＝' + esc(dp.asOfLy) + 'に押さえていた泊数。「あと」＝前年の最終実績に届くまでの泊数。</p>' + pace + '</div>' +
+      '<div class="card"><h2>受注泊数の推移（この先6ヶ月）</h2><p class="sub">横軸＝時点（毎週）、縦軸＝その時点で押さえていた泊数。</p>' + chart + '</div>' +
+      '<div class="card"><h2>直近4週間の予約・キャンセル</h2><p class="sub">最近入った予約の単価とリードタイムから、今のレートが効いているかを見ます。リードタイム＝予約（キャンセル）日から宿泊日までの日数。</p>' + ev + '</div>' +
+      '<div class="card"><h2>週ごとの受注泊数</h2><p class="sub">（ ）内は前週からの増減。赤＝キャンセルで減った週。</p>' + table(hd, rows) + '</div>';
+  }
+  function loadDaily(from, align) {
+    var cur = S.daily || S.dash.daily;
+    busy(true);
+    return call('api_daily', S.propertyId, S.asOf, from || cur.from, 184, align || cur.align).then(function (r) { S.daily = r; busy(false); render(); })
+      .catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+  }
+
+  /* =========================================================
+   * 収支（推計）：月次実績と同じく 横＝月、縦＝項目
+   * ======================================================= */
+  function vPnl() {
+    var d = S.dash, cur = d.pnl.current, prev = d.pnl.previous, m = d.master, fx = cur.fixedCost > 0;
+    var months = cur.months.map(function (x) { return x.month; });
+    var hd = [{ t: '項目' }].concat(months.map(function (mo) { return { t: mlabel(mo), cls: 'n' + (isFutureMonth(mo) ? ' future' : '') }; })).concat([{ t: '年度計', cls: 'n' }]);
+    var all = cur.months.concat([cur.total]);
+    function row(label, get, opt) {
+      opt = opt || {};
+      return '<tr class="' + (opt.cls || '') + '"><td class="lbl">' + label + '</td>' + all.map(function (x, i) {
+        var has = x.stays || opt.always, v = has ? get(x) : null;
+        var neg = typeof v === 'number' && v < 0 && opt.redNeg;
+        return '<td class="n' + (i < 12 && isFutureMonth(x.month) ? ' future' : '') + '"' + (neg ? ' style="color:var(--bad)"' : '') + '>' + (has ? (opt.fmt || yen)(v) : '') + '</td>';
+      }).join('') + '</tr>';
+    }
+    function cnt(v) { return v; }
+    var body = [
+      row('件数', function (x) { return x.stays; }, { fmt: cnt }),
+      row('泊数', function (x) { return x.nights; }, { fmt: cnt }),
+      row('販売額', function (x) { return x.sale; }, { cls: 'strong' }),
+      row('OTA手数料', function (x) { return -x.otaFee; }),
+      row('管理手数料（運営会社の収入）', function (x) { return -x.sb; }),
+      row('清掃実費', function (x) { return -x.cleaningCost; }),
+      row('宿泊税', function (x) { return -x.tax; }),
+      row('オーナー手残り（貢献利益）', function (x) { return x.contribution; }, { cls: 'total' }),
+      row('貢献率', function (x) { return x.contributionRate; }, { fmt: function (v) { return pct(v); } }),
+      row('1泊あたり手残り', function (x) { return x.perNight; })
+    ];
+    if (fx) {
+      body.push(row('固定費', function (x) { return -x.fixedCost; }, { always: true }));
+      body.push(row('オーナー営業利益', function (x) { return x.operating; }, { cls: 'total', always: true, redNeg: true }));
+    }
+    var prevRow = '<tr class="prev"><td class="lbl">手残り（FY' + (d.fy - 1) + '）</td>' + prev.months.concat([prev.total]).map(function (x) { return '<td class="n">' + (x.stays ? yen(x.contribution) : '') + '</td>'; }).join('') + '</tr>';
+    var be = cur.breakEven, cap = +m.annualCap, beCard;
+    if (be) {
+      beCard = '<div class="grid g4" style="margin-bottom:16px">' +
+        '<div class="kpi"><div class="label">固定費（月額）</div><div class="big num">' + yen(cur.fixedCost) + '<small>円</small></div></div>' +
+        '<div class="kpi"><div class="label">損益分岐（月）</div><div class="big num">' + be.monthNights + '<small>泊／月</small></div><div class="rows" style="grid-template-columns:1fr"><span style="text-align:left;color:var(--ink-2)">1泊の貢献利益 ' + yen(be.perNight) + '円（年度平均）で割った泊数</span></div></div>' +
+        '<div class="kpi"><div class="label">損益分岐（年）</div><div class="big num">' + be.yearNights + '<small>泊／年</small></div>' + (cap && cap < 365 ? '<div class="rows" style="grid-template-columns:1fr"><span style="text-align:left;color:' + (be.yearNights > cap ? 'var(--bad)' : 'var(--ink-2)') + '">営業上限' + cap + '日の' + Math.round(be.yearNights / cap * 100) + '%' + (be.yearNights > cap ? '：上限内では回収できません' : '') + '</span></div>' : '') + '</div>' +
+        '<div class="kpi"><div class="label">FY' + d.fy + ' 営業利益（推計）</div><div class="big num"' + (cur.total.operating < 0 ? ' style="color:var(--bad)"' : '') + '>' + man(cur.total.operating) + '<small>円</small></div><div class="rows" style="grid-template-columns:1fr"><span style="text-align:left;color:var(--ink-2)">貢献利益 − 固定費×12か月</span></div></div></div>';
+    } else {
+      beCard = '<div class="note">固定費がまだ入っていません。「マスタ登録」の<b>固定費（月額）</b>を入れると、営業利益と損益分岐の泊数が出ます。</div>';
+    }
+    return head('収支（推計）') +
+      '<div class="note"><b>オーナー側の収支</b>です。販売額から、OTA手数料・<b>運営会社の管理手数料</b>（＝運営会社の収入）・清掃の実費・宿泊税を引いた残りを「オーナー手残り」、さらに固定費（オーナー負担分）を引いたものを「オーナー営業利益」としています。<br><b>チェックイン月ベースの推計</b>です。OTA手数料は予約データの実額、管理手数料は' + esc(m.sbBase) + '×' + pct(m.sbRate) + '、清掃実費は1件' + yen(m.cleaningCost) + '円、宿泊税は大人1人1泊' + yen(m.taxPerAdult) + '円' + (m.taxStart ? '（' + esc(m.taxStart) + '以降）' : '') + 'で計算しています。月次実績（宿泊日ベース）とは、月をまたぐ連泊の計上月が違います。</div>' +
+      beCard +
+      '<div class="card"><h2>FY' + d.fy + ' 月別</h2><p class="sub">マイナスは差し引く費用。斜線の列は基準日より先の月（予約済み分のみ）。</p>' + table(hd, body.concat([prevRow])) + '</div>';
+  }
+
+  /* =========================================================
+   * レートカレンダー／料金案（料金ランクを選んで、日付を押して塗る）
+   *   layer 'cur'  … 今AirHostに入っている料金（レートカレンダー）
+   *   layer 'plan' … 来期に向けて決める料金（料金案）。決まったらAirHostに入れて「入れた」を押す
+   * ======================================================= */
+  function rcLevel(base, m) {
+    var f = +m.floor || 40000, c = +m.ceiling || 150000;
+    var t = Math.max(0, Math.min(1, (base - f) / Math.max(1, Math.min(c, 120000) - f)));
+    return Math.min(4, Math.floor(t * 5));
+  }
+  function rcEcon(base) {
+    var t = S.dash.rates;
+    return t.list.map(function (c) {
+      var row = (t.channels[c.name] || []).filter(function (r) { return r.base === base; })[0];
+      return row ? '<span><b>' + esc(c.name) + '</b> 実売 ' + yen(row.cells[0].sale) + '円・手残り ' + yen(row.cells[0].contribution) + '円</span>' : '';
+    }).join('');
+  }
+  function man1(v) { return (v / 10000).toFixed(1); }
+  function rcPaint() { if (!S.paint) S.paint = { base: +S.dash.master.standard || (S.dash.rateRanks[0] || 0), minStay: 1 }; return S.paint; }
+  function rcPend(layer) { S.pend = S.pend || { cur: {}, plan: {} }; return S.pend[layer]; }
+  function rcIndex() { var ix = {}; S.dash.rateCal.forEach(function (mo) { mo.days.forEach(function (x) { ix[x.date] = x; }); }); return ix; }
+  function rcSaved(x, layer) { var v = layer === 'plan' ? x.plan : (x.base ? { base: x.base, minStay: x.minStay } : null); return v ? { base: v.base, minStay: v.minStay || 1 } : null; }
+  function rcValue(x, layer) { var p = rcPend(layer)[x.date]; if (p) return p.base ? p : null; return rcSaved(x, layer); }
+  function rcPaintable(x) { return !x.past && !x.beforeOpen && !x.booked; }
+  function rcClean() { var m = S.dash.master; return /内包/.test(m.cleaningMode || '') ? 0 : (+m.cleaningFee || 0); }
+  function rcCell(x, layer) {
+    var m = S.dash.master, v = rcValue(x, layer), pend = !!rcPend(layer)[x.date];
+    var cls = ['rc-d', x.hol || x.wd === 0 ? 'sun' : x.wd === 6 ? 'sat' : '', x.past ? 'past' : '', x.beforeOpen ? 'pre' : '', pend ? 'pend' : ''];
+    var inner = '<span class="n">' + x.day + (x.hol ? '<i>祝</i>' : '') + (v && !x.booked && v.minStay > 1 ? '<em>' + v.minStay + '泊</em>' : '') + '</span>', style = '', tip = x.date;
+    if (x.booked) {
+      cls.push('bk'); style = ' style="--c:' + chColor(x.booked.channel) + '"';
+      inner += '<b>' + man1(x.booked.perNight) + '</b><small>予約済</small>';
+      tip += '　予約済み（' + x.booked.channel + '）素泊 ' + yen(x.booked.perNight) + '円';
+    } else if (v) {
+      cls.push('lv' + rcLevel(v.base, m));
+      inner += '<b>' + man1(v.base) + '</b>';
+      tip += '　' + yen(v.base) + '円' + (v.minStay > 1 ? '　最低' + v.minStay + '泊' : '') + (pend ? '　（未保存）' : '');
+    } else if (!x.past && !x.beforeOpen) {
+      cls.push('unset'); inner += '<small>' + (layer === 'plan' ? '' : '未設定') + '</small>';
+    }
+    if (layer === 'plan' && !x.booked && !x.past) {
+      var sub = [];
+      if (x.base) { var same = v && v.base === x.base && v.minStay === (x.minStay || 1); if (!same) sub.push('<span class="chg">今' + man1(x.base) + '</span>'); tip += '　今の料金 ' + yen(x.base) + '円' + (x.minStay > 1 ? '・最低' + x.minStay + '泊' : ''); }
+      if (x.comp) {
+        var eq = x.comp.median - rcClean(), r = v ? (v.base + rcClean()) / x.comp.median : null;
+        sub.push('<span class="cp' + (r > 1.15 ? ' hi' : r && r < 0.9 ? ' lo' : '') + '">競' + man1(eq) + '</span>');
+        tip += '　競合の中央値 ' + yen(x.comp.median) + '円（清掃費込み・' + x.comp.n + '軒）＝素泊換算 ' + yen(eq) + '円' + (r ? '　ZEN÷中央値 ' + Math.round(r * 100) + '%' : '');
+      }
+      var lyTxt = '';
+      if (x.ly && x.ly.sold) { lyTxt = '<span class="ly2 sold">前' + man1(x.ly.sold) + '<i>売</i></span>'; tip += '　前年同曜日 ' + x.ly.date + '：素泊 ' + yen(x.ly.sold) + '円で販売'; }
+      else if (x.ly && x.ly.rate) { lyTxt = '<span class="ly2">前' + man1(x.ly.rate) + '</span>'; tip += '　前年同曜日 ' + x.ly.date + '：' + yen(x.ly.rate) + '円で設定（売れていない）'; }
+      else if (x.ly) tip += '　前年同曜日 ' + x.ly.date + '：料金の記録なし';
+      if (sub.length) inner += '<span class="sub2">' + sub.join('') + '</span>';
+      inner += lyTxt;
+    }
+    if (layer === 'cur' && x.plan && !x.booked && !x.past && (!x.base || x.plan.base !== x.base || x.plan.minStay !== (x.minStay || 1))) { cls.push('pdiff'); tip += '　料金案 ' + yen(x.plan.base) + '円（まだAirHostに入れていない）'; }
+    if (x.note && layer === 'cur') tip += '　' + x.note;
+    return '<div class="' + cls.join(' ') + '" data-rcdate="' + x.date + '"' + style + ' title="' + esc(tip) + '">' + inner + '</div>';
+  }
+  function rcBox(c, layer) {
+    var wd = ['日', '月', '火', '水', '木', '金', '土'];
+    var cells = wd.map(function (w, i) { return '<div class="wd' + (i === 0 ? ' sun' : i === 6 ? ' sat' : '') + '" data-rcwd="' + i + '" data-rcmonth="' + c.month + '" title="この月の' + w + '曜日をまとめて塗る">' + w + '</div>'; });
+    for (var i = 0; i < c.days[0].wd; i++) cells.push('<div></div>');
+    c.days.forEach(function (x) { cells.push(rcCell(x, layer)); });
+    var info = layer === 'plan'
+      ? (c.planAvg ? '案 平均 ' + man1(c.planAvg) + '万' : '') + (c.planDiff ? '・<b style="color:#B7791F">変更 ' + c.planDiff + '日</b>' : '')
+      : (c.avgBase ? '平均 ' + man1(c.avgBase) + '万' : '') + (c.unsetFuture ? '・<b style="color:var(--bad)">未設定 ' + c.unsetFuture + '日</b>' : '');
+    return '<div class="rc-month"><div class="cal-h">' + ymlabel(c.month) + '<span>' + info + '</span></div><div class="rc-g">' + cells.join('') + '</div></div>';
+  }
+  function rcPalette(layer) {
+    var d = S.dash, m = d.master, p = rcPaint(), n = Object.keys(rcPend(layer)).length;
+    var chips = d.rateRanks.map(function (b) { return '<button type="button" class="rk lv' + rcLevel(b, m) + (p.base === b ? ' on' : '') + '" data-rk="' + b + '">' + man1(b) + '</button>'; }).join('') +
+      '<button type="button" class="rk erase' + (p.base === 0 ? ' on' : '') + '" data-rk="0">消す</button>';
+    var ms = '<div class="seg">' + [1, 2, 3].map(function (k) { return '<button type="button" data-rkmin="' + k + '" class="' + (p.minStay === k ? 'on' : '') + '">' + (k === 1 ? '制限なし' : '最低' + k + '泊') + '</button>'; }).join('') + '</div>';
+    return '<div class="card rc-pal"><div class="rk-row">' + chips + '</div>' +
+      '<div class="rk-row2">' + ms + '<div class="rc-econ">' + (p.base ? '<span><b>' + yen(p.base) + '円</b></span>' + rcEcon(p.base) : '<span>押した日の料金を消します</span>') + '</div>' +
+      '<div class="rc-save' + (n ? ' on' : '') + '"><span>' + (n ? '未保存 <b>' + n + '日</b>' : '') + '</span><button class="btn small" id="btnRcUndo"' + (n ? '' : ' disabled') + '>取り消す</button><button class="btn small primary" id="btnRcSave"' + (n ? '' : ' disabled') + '>保存する</button></div></div></div>';
+  }
+  function rcHowTo() {
+    return '<p class="sub rc-how">上の<b>料金ランク</b>（万円・素泊のBase）を選んで日付を押すと入ります。押したままなぞるとその間の日に、曜日の見出し（土など）を押すとその月の同じ曜日にまとめて入ります。予約済みの日と過去の日は変わりません。</p>';
+  }
+  /** 表示する年（暦年）。レートカレンダーは今年、料金案は来年が初期値 */
+  function rcYear(layer) {
+    var y = +S.asOf.slice(0, 4), k = layer === 'plan' ? 'planYear' : 'rcYear';
+    if (!S[k]) S[k] = layer === 'plan' ? y + 1 : y;
+    return S[k];
+  }
+  function rcMonths(layer) {
+    var y = String(rcYear(layer));
+    return { list: S.dash.rateCal.filter(function (c) { return c.month.slice(0, 4) === y; }) };
+  }
+  function rcYearSeg(layer) {
+    var y = +S.asOf.slice(0, 4), cur = rcYear(layer);
+    return '<div class="seg">' + [y, y + 1].map(function (v) { return '<button data-rcyear="' + layer + ':' + v + '" class="' + (cur === v ? 'on' : '') + '">' + v + '年</button>'; }).join('') + '</div>';
+  }
+  function rcLegend(layer) {
+    return '<div class="cal-legend"><span><span class="sw rc-sw lv0"></span>安い</span><span><span class="sw rc-sw lv2"></span></span><span><span class="sw rc-sw lv4"></span>高い</span>' +
+      '<span><span class="sw" style="outline:2px solid #B7791F;background:#fff"></span>未保存</span><span>色付きの枠＝予約済み（数字は売れた素泊単価）</span>' +
+      (layer === 'plan' ? '<span><b>今</b>＝AirHostに入っている今の料金（違う日は橙）</span><span><b>競</b>＝競合の中央値を素泊に直した額（ZENが115%超は赤・90%未満は緑）</span><span><b>前</b>＝前年同曜日の料金（<b>売</b>＝売れた素泊単価）</span>'
+        : '<span><span class="sw" style="background:#fff;box-shadow:inset 0 -3px 0 #B7791F"></span>料金案と違う日</span>') + '</div>';
+  }
+  function vRateCal() {
+    var d = S.dash, m = d.master, mo = rcMonths('cur');
+    return head('レートカレンダー', rcYearSeg('cur')) +
+      '<div class="note"><b>今AirHostに入っている料金</b>です。AirHostで料金を変えたら、ここも同じように塗って保存してください。来期の料金を考えるときは「<a href="#" data-tab="plan">料金案（来期）</a>」で作ります。下限 ' + yen(m.floor) + '円〜上限 ' + yen(m.ceiling) + '円。</div>' +
+      rcPalette('cur') +
+      '<div class="card">' + rcHowTo() + rcLegend('cur') +
+      '<div class="rc-months" id="rcMonths" data-layer="cur">' + mo.list.map(function (c) { return rcBox(c, 'cur'); }).join('') + '</div></div>';
+  }
+  function chgText(c) {
+    var wdn = ['日', '月', '火', '水', '木', '金', '土'], f = function (x, y) { return (y ? x.slice(0, 4) + '/' : '') + x.slice(5).replace('-', '/') + '（' + wdn[new Date(x + 'T00:00:00').getDay()] + '）'; };
+    return f(c.from, true) + (c.days > 1 ? '〜' + f(c.to, c.to.slice(0, 4) !== c.from.slice(0, 4)) : '') + '　' + yen(c.base) + '円' + (c.minStay > 1 ? '・最低' + c.minStay + '泊' : '');
+  }
+  function planChangesCard() {
+    var list = S.dash.planChanges || [];
+    if (!list.length) return '<div class="card"><h2>AirHostに入れる変更</h2><p class="sub">料金案と今の料金に違いはありません。</p></div>';
+    var rows = list.map(function (c, i) {
+      var olds = c.olds.map(function (o) { return o ? yen(o) : '未設定'; }).join('／');
+      return '<tr><td>' + esc(chgText(c).split('　')[0]) + '</td><td class="num">' + c.days + '日</td><td class="num"><b>' + yen(c.base) + '</b></td><td>' + (c.minStay > 1 ? '最低' + c.minStay + '泊' : '—') + '</td><td class="muted">' + esc(olds) + '</td><td><button class="btn small" data-applychg="' + i + '">AirHostに入れた</button></td></tr>';
+    }).join('');
+    var days = list.reduce(function (a, c) { return a + c.days; }, 0);
+    return '<div class="card"><h2>AirHostに入れる変更</h2><p class="sub">料金案のうち、今の料金と違う日を「同じ料金が続く期間」にまとめています（' + list.length + '件・' + days + '日）。AirHostに入れ終わったら「AirHostに入れた」を押すと、レートカレンダー（今の料金）にも反映されます。</p>' +
+      '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>期間</th><th class="num">日数</th><th class="num">料金案（円）</th><th>最低泊数</th><th>今の料金</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="toolbar" style="margin-top:10px"><button class="btn" id="btnChgCopy">一覧をコピー</button><button class="btn" id="btnChgAll">全部AirHostに入れた</button></div>' +
+      '<textarea id="chgText" readonly class="cp-prompt">' + esc(list.map(chgText).join('\n')) + '</textarea></div>';
+  }
+  function vPlan() {
+    var mo = rcMonths('plan'), y = rcYear('plan');
+    var empty = !mo.list.some(function (c) { return c.planSet; });
+    var seedBtn = '<button class="btn small" id="btnSeedPlan" data-year="' + y + '">' + (empty ? '今の料金を下書きにコピー' : '空いている日に今の料金をコピー') + '</button>';
+    return head('料金案（来期）', rcYearSeg('plan')) +
+      '<div class="note">来期の料金を決める場所です。ここで塗っても<b>今の料金（レートカレンダー）は変わりません</b>。各日の<b>今</b>はAirHostに入っている今の料金（料金案と違う日だけ表示）、<b>競</b>は集めた競合の中央値を素泊に直した額、<b>前</b>は前年同曜日の料金（売れた日は売れた単価）です。決まったら下の「AirHostに入れる変更」を見ながらAirHostに入れてください。</div>' +
+      (empty ? '<div class="note">' + y + '年の料金案はまだありません。' + seedBtn + ' してから直すと早いです。</div>' : '') +
+      rcPalette('plan') +
+      '<div class="card">' + rcHowTo() + rcLegend('plan') + (empty ? '' : '<p class="sub">' + seedBtn + '</p>') +
+      '<div class="rc-months" id="rcMonths" data-layer="plan">' + mo.list.map(function (c) { return rcBox(c, 'plan'); }).join('') + '</div></div>' +
+      planChangesCard();
+  }
+  function wireRateCal() {
+    var box = $('rcMonths'); if (!box) return;
+    var layer = box.getAttribute('data-layer'), ix = rcIndex(), down = false, start = null, snap = null, last = null;
+    function paintDate(dt) {
+      var x = ix[dt]; if (!x || !rcPaintable(x)) return;
+      var p = rcPaint(), pend = rcPend(layer), sv = rcSaved(x, layer);
+      var same = p.base ? (sv && sv.base === p.base && sv.minStay === p.minStay) : !sv;
+      if (same) delete pend[dt]; else pend[dt] = { base: p.base, minStay: p.base ? p.minStay : 1 };
+      paintCell(dt);
+    }
+    // なぞると「押し始めた日〜今指している日」の範囲をまとめて塗る（範囲から外れた日は元に戻す）
+    function strokeTo(dt) {
+      if (dt === last) return; last = dt;
+      var a = start < dt ? start : dt, z = start < dt ? dt : start, pend = rcPend(layer);
+      Object.keys(snap.touched).forEach(function (k) {
+        if (k >= a && k <= z) return;
+        if (snap.before.hasOwnProperty(k)) pend[k] = snap.before[k]; else delete pend[k];
+        delete snap.touched[k]; paintCell(k);
+      });
+      for (var k = a; k <= z; k = addDay(k)) {
+        if (!snap.touched[k]) { snap.touched[k] = true; if (pend.hasOwnProperty(k)) snap.before[k] = pend[k]; }
+        paintDate(k);
+      }
+    }
+    function addDay(d) { var t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + 1); return t.toISOString().slice(0, 10); }
+    function paintCell(dt) {
+      var x = ix[dt], el = box.querySelector('[data-rcdate="' + dt + '"]'); if (!x || !el) return;
+      var tmp = document.createElement('div'); tmp.innerHTML = rcCell(x, layer); var n = tmp.firstChild;
+      el.className = n.className; el.innerHTML = n.innerHTML; el.title = n.title; el.setAttribute('style', n.getAttribute('style') || '');
+    }
+    function refreshBar() { var pal = document.querySelector('.rc-pal'), sx = pal ? pal.querySelector('.rk-row').scrollLeft : 0; if (pal) pal.outerHTML = rcPalette(layer); var r = document.querySelector('.rc-pal .rk-row'); if (r) r.scrollLeft = sx; wirePal(); }
+    box.addEventListener('pointerdown', function (e) {
+      var w = e.target.closest('[data-rcwd]');
+      if (w) {
+        var wd = +w.getAttribute('data-rcwd'), mo = w.getAttribute('data-rcmonth');
+        Object.keys(ix).forEach(function (k) { if (k.slice(0, 7) === mo && ix[k].wd === wd) paintDate(k); });
+        refreshBar(); return;
+      }
+      var c = e.target.closest('[data-rcdate]'); if (!c) return;
+      down = true; e.preventDefault();
+      try { box.setPointerCapture(e.pointerId); } catch (x) {} // なぞっている間の移動と離したことを box で受ける
+      start = c.getAttribute('data-rcdate'); last = null; snap = { touched: {}, before: {} };
+      strokeTo(start);
+    });
+    box.addEventListener('pointermove', function (e) {
+      if (!down) return;
+      var el = document.elementFromPoint(e.clientX, e.clientY), c = el && el.closest && el.closest('[data-rcdate]');
+      if (c && box.contains(c)) strokeTo(c.getAttribute('data-rcdate'));
+    });
+    var end = function () { if (down) { down = false; refreshBar(); } };
+    box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end); box.addEventListener('lostpointercapture', end);
+    function wirePal() {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-rk]'), function (b) { b.onclick = function () { rcPaint().base = +b.getAttribute('data-rk'); refreshBar(); }; });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-rkmin]'), function (b) { b.onclick = function () { rcPaint().minStay = +b.getAttribute('data-rkmin'); refreshBar(); }; });
+      var u = $('btnRcUndo'); if (u) u.onclick = function () { S.pend[layer] = {}; render(); };
+      var sbtn = $('btnRcSave'); if (sbtn) sbtn.onclick = function () {
+        var pend = rcPend(layer), list = Object.keys(pend).sort().map(function (k) { return { date: k, base: pend[k].base, minStay: pend[k].minStay, note: '' }; });
+        if (!list.length) return;
+        busy(true);
+        call('api_saveRates', S.propertyId, list, layer).then(function (r) {
+          S.pend[layer] = {};
+          toast((r.changed ? r.changed + '日の料金を保存しました' : '') + (r.removed ? (r.changed ? '・' : '') + r.removed + '日の設定を消しました' : ''), 'ok');
+          return load();
+        }).catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+      };
+    }
+    wirePal();
+    var on = document.querySelector('.rc-pal .rk.on'); if (on && on.parentNode.scrollWidth > on.parentNode.clientWidth) on.parentNode.scrollLeft = on.offsetLeft - 60;
+    var seed = $('btnSeedPlan');
+    if (seed) seed.onclick = function () {
+      var yy = seed.getAttribute('data-year'); busy(true);
+      call('api_seedPlan', S.propertyId, yy + '-01-01', yy + '-12-31').then(function (x) { toast(x.changed ? x.changed + '日分を下書きにコピーしました' : 'コピーする日がありませんでした', 'ok'); return load(); })
+        .catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+    };
+    function apply(dates) {
+      if (Object.keys(rcPend('plan')).length) { toast('先に料金案の変更を保存してください', 'err'); return; }
+      busy(true);
+      call('api_applyPlan', S.propertyId, dates).then(function (x) { toast(x.changed + '日を今の料金に反映しました', 'ok'); return load(); })
+        .catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-applychg]'), function (b) { b.onclick = function () { apply(S.dash.planChanges[+b.getAttribute('data-applychg')].dates); }; });
+    var all = $('btnChgAll'); if (all) all.onclick = function () { var ds = []; S.dash.planChanges.forEach(function (c) { ds = ds.concat(c.dates); }); apply(ds); };
+    var cp = $('btnChgCopy'); if (cp) cp.onclick = function () { var t = $('chgText'); t.select(); try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand('copy'); } toast('コピーしました', 'ok'); };
+  }
+
+  /* =========================================================
+   * 競合料金
+   * ======================================================= */
+  function vComp() {
+    var d = S.dash, c = d.comp, wdn = ['日', '月', '火', '水', '木', '金', '土'];
+    function man1(v) { return (v / 10000).toFixed(1); }
+    if (!c.dates.length) {
+      return head('競合料金') + '<div class="note">まだ競合料金が集まっていません。下の「Claudeで集める」から集めると、ここに並びます。</div>' + compCollectCard() + compListCard(c);
+    }
+    var hd = '<tr><th class="rh">宿泊日<small>押すと価格の推移</small></th>' + c.dates.map(function (x) { return '<th class="' + (x.hol || x.wd === 0 ? 'sun' : x.wd === 6 ? 'sat' : '') + (S.compDate === x.date ? ' picked' : '') + '" data-compdate="' + x.date + '" style="cursor:pointer">' + md(x.date) + '<small>' + (x.hol ? '祝' : wdn[x.wd]) + '</small></th>'; }).join('') + '</tr>';
+    function priceCell(x) {
+      if (!x) return '<td class="na" title="この回は集めていません">—</td>';
+      if (x.available !== 'あり') return '<td class="full" title="この日は検索結果に出ませんでした（満室または掲載なし）">満室</td>';
+      var diff = x.prev ? x.price - x.prev : 0, arrow = diff > 0 ? '<i class="up">▲</i>' : diff < 0 ? '<i class="down">▼</i>' : '';
+      var tip = yen(x.price) + '円' + (x.listPrice > x.price ? '（割引前 ' + yen(x.listPrice) + '円）' : '') + (x.prev ? '　前回（' + x.prevAt + '）' + yen(x.prev) + '円' : '');
+      return '<td title="' + esc(tip) + '">' + man1(x.price) + arrow + (x.listPrice > x.price ? '<small>割引中</small>' : '') + '</td>';
+    }
+    var self = c.rows.filter(function (r) { return r.role === '自施設'; })[0];
+    var rows = [];
+    rows.push('<tr class="setrate"><th class="rh">ZEN 設定レート<small>Base＋清掃費</small></th>' + c.setRate.map(function (v) { return '<td>' + (v ? man1(v) : '<span class="muted">未設定</span>') + '</td>'; }).join('') + '</tr>');
+    if (self) rows.push('<tr class="self"><th class="rh">' + esc(d.master.name) + '（Airbnb掲載）<small>実際にゲストに見える額</small></th>' + self.cells.map(priceCell).join('') + '</tr>');
+    c.rows.filter(function (r) { return r.role !== '自施設'; }).forEach(function (r) {
+      rows.push('<tr class="' + (r.role === '参考' ? 'ref' : '') + '"><th class="rh"><a href="' + esc(r.url || ('https://www.airbnb.jp/rooms/' + r.listingId)) + '" target="_blank" rel="noopener">' + esc(r.name) + '</a><small>' + esc(r.role === '参考' ? '参考・' : '') + (r.bedrooms ? '寝室' + r.bedrooms : '') + (r.rating ? '・★' + r.rating + '（' + r.reviews + '）' : '') + '</small></th>' + r.cells.map(priceCell).join('') + '</tr>');
+    });
+    rows.push('<tr class="med"><th class="rh">競合の中央値<small>参考は除く</small></th>' + c.median.map(function (v) { return '<td>' + (v ? man1(v) : '—') + '</td>'; }).join('') + '</tr>');
+    if (self) rows.push('<tr class="ratio"><th class="rh">ZEN ÷ 中央値</th>' + self.cells.map(function (x, i) {
+      var m = c.median[i]; if (!x || x.available !== 'あり' || !m) return '<td>' + (x && x.available !== 'あり' ? '<span class="muted">予約済</span>' : '—') + '</td>';
+      var r = x.price / m; return '<td class="' + (r > 1.15 ? 'hi' : r < 0.9 ? 'lo' : '') + '">' + Math.round(r * 100) + '%</td>';
+    }).join('') + '</tr>');
+    var tbl = '<div class="inv-wrap"><table class="inv comp"><thead>' + hd + '</thead><tbody>' + rows.join('') + '</tbody></table></div>';
+    return head('競合料金') +
+      '<div class="note">Airbnbの物件ページ（<b>1泊・大人10名</b>）で、ゲストの画面に出る<b>総額（清掃費・手数料込み）</b>です。単位は万円。最終収集日 <b>' + esc(c.checkedAt) + '</b>。▲▼は前回の収集との比較、「満室」はその日に予約できなかった物件です。</div>' +
+      '<div class="card"><h2>宿泊日ごとの比較</h2><p class="sub">ZEN÷中央値が115%を超える日は赤、90%を下回る日は緑。設定レートとAirbnb掲載額がずれている日は、AirHostへの反映漏れの可能性があります。</p>' + tbl + '</div>' +
+      compHistoryCard(c) +
+      compCollectCard() + compListCard(c);
+  }
+  /** 「Claudeで集める」：押した人のClaude（Claude in Chrome）で収集する依頼文を作る */
+  function compCollectCard() {
+    var d = S.dash, p = d.compPlan, wdn = ['日', '月', '火', '水', '木', '金', '土'];
+    var db = ((S.boot.dbUrl || '').match(/\/d\/([A-Za-z0-9_-]+)/) || [])[1] || '';
+    if (!p || !p.listings.length) return '';
+    var text = 'minpaku-competitor-collect のスキルで、競合料金を集めてください。\n' +
+      'DB: ' + db + '\n物件名: ' + d.master.name + '\n' +
+      '掲載ID: ' + p.listings.map(function (l) { return l.listingId; }).join(', ') + '\n' +
+      '宿泊日: ' + p.dates.map(function (x) { return x.date; }).join(', ');
+    var url = 'https://claude.ai/new?q=' + encodeURIComponent(text);
+    var count = function (k) { return p.dates.filter(function (x) { return x.kind === k; }).length; };
+    var mins = Math.max(1, Math.round(p.pages * 5 / 60));
+    return '<div class="card"><h2>競合料金を集める</h2>' +
+      '<p class="sub">ボタンを押すと、<b>押した人のClaude</b>が開き、その人のChrome（Claude in Chrome）でAirbnbの物件ページを順に開いて料金を読み、このDBに書き込みます。</p>' +
+      '<div class="cp-plan"><div><b>' + p.dates.length + '日</b><span>宿泊日（土曜' + count('土曜') + '・主要日' + count('主要日') + '・平日' + count('平日') + '）</span></div><div><b>' + p.listings.length + '件</b><span>物件（自施設を含む）</span></div><div><b>' + p.pages + 'ページ</b><span>約' + mins + '分</span></div></div>' +
+      '<div class="cp-dates">' + p.dates.map(function (x) { return '<span class="k-' + (x.kind === '土曜' ? 'sat' : x.kind === '主要日' ? 'key' : 'wd') + '">' + md(x.date) + '（' + wdn[x.wd] + '）</span>'; }).join('') + '</div>' +
+      '<p class="sub" style="margin-top:8px">平日は当月・翌月・翌々月から月〜木を3日ずつ選んでいます（祝日・祝前日は除く）。同じ日に開けば同じ日が選ばれます。</p>' +
+      '<div class="toolbar" style="margin-top:10px"><a class="btn primary" href="' + esc(url) + '" target="_blank" rel="noopener">Claudeで集める</a><button class="btn" id="btnCpCopy" type="button">依頼文をコピー</button></div>' +
+      '<textarea id="cpPrompt" readonly class="cp-prompt">' + esc(text) + '</textarea>' +
+      '<p class="sub">使う人に必要なもの：Claude（デスクトップアプリかclaude.ai）と、ChromeのClaude in Chrome拡張機能／このDBスプレッドシートの編集権限とGoogleスプレッドシートのコネクタ／「minpaku-competitor-collect」スキル（最初の1回だけ追加）。Airbnbにはログインしていなくても動きます。</p></div>';
+  }
+  /** 収集の履歴：宿泊日を選ぶと、収集日ごとの価格の推移。選んでいなければ収集日の一覧 */
+  function compHistoryCard(c) {
+    var names = {}; (c.competitors || []).forEach(function (x) { names[x.listingId] = x; });
+    var checksTbl = table([{ t: '収集日' }, { t: '記録した件数', cls: 'n' }, { t: '宿泊日', cls: 'n' }, { t: '物件', cls: 'n' }],
+      (c.checks || []).map(function (x) { return '<tr><td>' + esc(x.checkedAt) + '</td><td class="n">' + x.rows + '</td><td class="n">' + x.dates + '日</td><td class="n">' + x.listings + '件</td></tr>'; }));
+    var body = '';
+    var h = S.compDate && c.history && c.history[S.compDate];
+    if (h) {
+      var cols = {}; Object.keys(h).forEach(function (id) { Object.keys(h[id]).forEach(function (k) { cols[k] = true; }); });
+      var ck = Object.keys(cols).sort();
+      var ids = Object.keys(h).sort(function (a, b) { var ra = (names[a] || {}).role === '自施設' ? 0 : 1, rb = (names[b] || {}).role === '自施設' ? 0 : 1; return ra - rb; });
+      body = '<h3 style="font-size:14px;margin:14px 0 6px">' + esc(S.compDate) + ' の価格の推移（収集日ごと・円）</h3>' + table([{ t: '物件' }].concat(ck.map(function (k) { return { t: md(k), cls: 'n' }; })),
+        ids.map(function (id) {
+          var n = names[id] || {};
+          return '<tr' + (n.role === '自施設' ? ' class="hl"' : '') + '><td>' + esc(n.name || id) + '</td>' + ck.map(function (k) { var x = h[id][k]; return '<td class="n">' + (!x ? '' : x.available === 'あり' ? yen(x.price) : '<span class="muted">満室</span>') + '</td>'; }).join('') + '</tr>';
+        })) + '<p class="sub"><button class="btn small" data-compdate="">閉じる</button></p>';
+    }
+    return '<div class="card"><h2>収集の履歴</h2><p class="sub">集めた金額は、収集日ごとにすべて残しています（上書きしません）。上の表の宿泊日を押すと、その日の価格が収集日ごとにどう動いたかが出ます。</p>' + body + checksTbl + '</div>';
+  }
+  function compListCard(c) {
+    var list = c.competitors || [];
+    var rows = list.map(function (x, i) {
+      return '<tr><td><a href="' + esc(x.url || ('https://www.airbnb.jp/rooms/' + x.listingId)) + '" target="_blank" rel="noopener">' + esc(x.name || '（名前は次回の収集で入ります）') + '</a><div class="muted" style="font-size:11px">掲載ID ' + esc(x.listingId) + '</div></td><td><select class="cp-role" data-i="' + i + '">' + ['自施設', '競合', '参考'].map(function (o) { return '<option' + (x.role === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></td><td class="n">' + esc(x.bedrooms) + '</td><td class="n">' + (x.rating ? '★' + esc(x.rating) + '（' + esc(x.reviews) + '）' : '') + '</td><td style="text-align:center"><input type="checkbox" class="cp-active" data-i="' + i + '"' + (x.active === 'はい' ? ' checked' : '') + '></td><td><input type="text" class="cp-note" data-i="' + i + '" value="' + esc(x.note) + '" style="width:100%;min-width:160px"></td></tr>';
+    });
+    var add = '<form id="cpAdd" class="cp-add" onsubmit="return false"><input type="url" id="cp_url" placeholder="AirbnbのURLを貼る（例：https://www.airbnb.jp/rooms/12345678）" aria-label="AirbnbのURL">' +
+      '<input type="text" id="cp_name" placeholder="名前（空なら次回の収集で自動入力）" aria-label="名前"><select id="cp_role" aria-label="区分"><option>競合</option><option>参考</option></select>' +
+      '<button class="btn primary" id="btnCpAdd">追加する</button></form>';
+    return '<div class="card"><h2>集める物件</h2><p class="sub">AirbnbのURLを貼ると、次回の収集から入ります。「収集する」を外すと、次回から集めません。</p>' + add +
+      (list.length ? table([{ t: '物件' }, { t: '区分' }, { t: '寝室', cls: 'n' }, { t: '評価', cls: 'n' }, { t: '収集する' }, { t: 'メモ' }], rows) + '<div style="margin-top:10px"><button class="btn primary" id="btnSaveComps">保存する</button></div>' : '<p class="empty">まだ登録がありません。</p>') + '</div>';
+  }
+  function wireComp() {
+    var cp = $('btnCpCopy');
+    if (cp) cp.onclick = function () {
+      var t = $('cpPrompt'); t.focus(); t.select();
+      var done = function () { toast('依頼文をコピーしました。Claudeに貼り付けて送ってください', 'ok'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).then(done).catch(function () { try { document.execCommand('copy'); done(); } catch (e) { toast('選択した文字を手でコピーしてください'); } });
+      else { try { document.execCommand('copy'); done(); } catch (e) { toast('選択した文字を手でコピーしてください'); } }
+    };
+    var a = $('btnCpAdd');
+    if (a) a.onclick = function () {
+      var u = $('cp_url').value.trim(); if (!u) { toast('URLを貼ってください', 'err'); return; }
+      busy(true);
+      call('api_addCompetitorUrl', S.propertyId, u, $('cp_name').value.trim(), $('cp_role').value)
+        .then(function (c) { toast('「' + (c.name || '掲載ID ' + c.listingId) + '」を追加しました。次回の収集から入ります', 'ok'); return load(); })
+        .catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+    };
+    var b = $('btnSaveComps'); if (!b) return;
+    b.onclick = function () {
+      var list = (S.dash.comp.competitors || []).map(function (x, i) {
+        return Object.assign({}, x, { role: document.querySelector('.cp-role[data-i="' + i + '"]').value, active: document.querySelector('.cp-active[data-i="' + i + '"]').checked, note: document.querySelector('.cp-note[data-i="' + i + '"]').value });
+      });
+      busy(true);
+      call('api_saveCompetitors', S.propertyId, list).then(function () { toast('保存しました', 'ok'); return load(); }).catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+    };
+  }
+
+  /* =========================================================
+   * レート表
+   * ======================================================= */
+  function vRates() {
+    var d = S.dash, t = d.rates, m = d.master;
+    if (!t.channels[S.rateChannel]) S.rateChannel = t.list.length ? t.list[0].name : '';
+    var list = t.channels[S.rateChannel] || [], ch = t.list.filter(function (c) { return c.name === S.rateChannel; })[0] || {};
+    var segCh = '<div class="seg" id="rateCh">' + t.list.map(function (c) { return '<button data-ch="' + esc(c.name) + '" class="' + (S.rateChannel === c.name ? 'on' : '') + '">' + esc(c.name) + (c.kind === '直販' ? '<small style="opacity:.7;margin-left:4px">基準</small>' : '') + '</button>'; }).join('') + '</div>';
+    var segM = '<div class="seg" id="rateM">' + [['shown', '宿泊料'], ['sale', '宿泊料（清掃費込）'], ['net', '手取り'], ['contribution', 'オーナー手残り']].map(function (o) { return '<button data-m="' + o[0] + '" class="' + (S.rateMetric === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>';
+    var stdIdx = -1, best = Infinity;
+    list.forEach(function (r, i) { var df = Math.abs(r.base - (m.standard || 0)); if (df < best) { best = df; stdIdx = i; } });
+    var hd = [{ t: 'ランク' }, { t: 'Base（素泊）', cls: 'n' }].concat(t.discounts.map(function (x) { return { t: x ? Math.round(x * 100) + '%OFF' : '定価', cls: 'n' }; }));
+    var rows = list.map(function (r, i) {
+      return '<tr class="' + (i === stdIdx ? 'hl' : '') + (i === 0 ? ' floor' : '') + '"><td><b>' + esc(r.code) + '</b>' + (i === stdIdx ? ' <span class="chip future">標準</span>' : '') + '</td><td class="n">' + yen(r.base) + '</td>' +
+        r.cells.map(function (c) { var v = c[S.rateMetric]; return '<td class="n' + (S.rateMetric === 'contribution' && v < 0 ? ' neg' : '') + '">' + yen(v) + '</td>'; }).join('') + '</tr>';
+    });
+    var inclusive = /内包/.test(m.cleaningMode);
+    var clean = inclusive ? '清掃費は宿泊料に内包' : '清掃費 ' + yen(m.cleaningFee) + '円を別途請求';
+    var disc = inclusive ? '割引は売価全体にかかる' : ch.discountOnCleaning ? '割引は清掃費込みの総額にかかる' : '割引は宿泊料だけにかかり、清掃費は後から足す';
+    var info = '<div class="feebar">' +
+      '<div><span>' + (ch.kind === '直販' ? '決済手数料' : 'OTA手数料') + '</span><b>' + pct(ch.rate, 1) + '</b></div>' +
+      '<div><span>管理手数料</span><b>' + pct(m.sbRate, 0) + '</b><small>' + esc(/販売額/.test(m.sbBase) ? '販売額に対して' : '宿泊料（清掃費除く）に対して') + '</small></div>' +
+      '<div><span>清掃の実費</span><b>' + yen(m.cleaningCost) + '円</b><small>1件あたり</small></div>' +
+      '<div><span>掲載倍率</span><b>' + (ch.mult || 1).toFixed(2) + '倍</b><small>' + (ch.mult && ch.mult !== 1 ? 'Base×' + ch.mult.toFixed(2) + 'で掲載' : 'Baseのまま掲載') + '</small></div>' +
+      '<div class="wide"><span>計算</span><small>「宿泊料」＝Base×掲載倍率×（1−割引率）。AirbnbやBookingの画面に出る1泊の料金（清掃費は含まない）。' + disc + '。<br>「宿泊料（清掃費込）」＝宿泊料＋清掃費。Airbnbで競合と比べるときの額（' + clean + '・宿泊税は別）　／　「手取り」＝宿泊料（清掃費込） − ' + (ch.kind === '直販' ? '決済' : 'OTA') + '手数料 − 管理手数料（運営会社の収入）　／　「オーナー手残り」＝手取り − 清掃の実費（1泊1件・固定費は別）</small></div></div>';
+    return head('レート表') +
+      '<div class="toolbar">' + segCh + segM + '</div>' + info +
+      '<div class="card">' + table(hd, rows) + '<p class="sub" style="margin:10px 0 0">下限 ' + yen(m.floor) + '円〜上限 ' + yen(m.ceiling) + '円、' + yen(m.stepBoundary) + '円までは' + yen(m.step1) + '円刻み、超えたら' + yen(m.step2) + '円刻み。チャネルや手数料は「マスタ登録」で追加・変更できます。</p></div>';
+  }
+
+  /* =========================================================
+   * マスタ登録
+   * ======================================================= */
+  var INFER_KEYS = { cleaningFee: '清掃費', cleaningMode: '清掃費の扱い', standard: '最も多い素泊単価', capacity: '最大人数の実績', openDate: '最初のチェックイン' };
+  function chEditor(list) {
+    var inf = S.inferred, infBy = {};
+    ((inf && inf.channels) || []).forEach(function (c) { infBy[c.channel] = c; });
+    var rows = (list || []).map(function (c, i) {
+      var sug = '', iv = infBy[c.name];
+      if (iv) {
+        sug = Math.abs(iv.rate - c.rate) < 0.0005 ? '<span class="sugg same">実績と一致</span>' : '<span class="sugg">実績 ' + pct(iv.rate, 2) + '（' + iv.count + '件）<button class="btn small" data-applych="' + i + '">反映</button></span>';
+      }
+      return '<tr data-ch-row="' + i + '">' +
+        '<td><input type="text" class="ch-name" value="' + esc(c.name) + '" aria-label="チャネル名" style="width:150px"></td>' +
+        '<td><select class="ch-kind" aria-label="種別"><option' + (c.kind === '直販' ? ' selected' : '') + '>直販</option><option' + (c.kind !== '直販' ? ' selected' : '') + '>OTA</option></select></td>' +
+        '<td><div class="inwrap"><input type="number" step="0.01" class="ch-rate" value="' + (Math.round(c.rate * 100000) / 1000) + '" aria-label="手数料率" style="width:80px"><span class="unit">%</span>' + sug + '</div></td>' +
+        '<td><div class="inwrap"><input type="number" step="0.01" class="ch-mult" value="' + c.mult + '" aria-label="掲載倍率" style="width:70px"><span class="unit">倍</span></div></td>' +
+        '<td style="text-align:center"><input type="checkbox" class="ch-disc"' + (c.discountOnCleaning ? ' checked' : '') + ' aria-label="割引に清掃費を含む"></td>' +
+        '<td style="text-align:center"><input type="checkbox" class="ch-active"' + (c.active !== false ? ' checked' : '') + ' aria-label="レート表に出す"></td>' +
+        '<td><button class="btn small" data-delch="' + i + '">削除</button></td></tr>';
+    });
+    var names = (list || []).map(function (c) { return c.name; });
+    var missing = Object.keys(infBy).filter(function (k) { return names.indexOf(k) < 0; });
+    var miss = missing.length ? '<div class="note" style="margin:10px 0 0">予約データにあって未登録のチャネル：' + missing.map(function (k) { return '<b>' + esc(k) + '</b>（' + infBy[k].count + '件・' + pct(infBy[k].rate, 2) + '） <button class="btn small" data-addinf="' + esc(k) + '">登録</button>'; }).join('　') + '</div>' : '';
+    return '<div class="tbl-wrap"><table class="ch-table" id="chTable"><thead><tr><th>チャネル名</th><th>種別</th><th>手数料率</th><th>掲載倍率</th><th>割引に清掃費を含む</th><th>レート表に出す</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>' +
+      '<div style="margin-top:10px"><button class="btn" data-addch="1">＋ 新しいOTAを登録</button></div>' + miss;
+  }
+  function readChannels() {
+    var out = [];
+    document.querySelectorAll('#chTable tbody tr').forEach(function (tr) {
+      var q = function (c) { return tr.querySelector(c); };
+      var r = q('.ch-rate').value;
+      out.push({ name: q('.ch-name').value.trim(), kind: q('.ch-kind').value, rate: r === '' ? 0 : Number(r) / 100, mult: Number(q('.ch-mult').value) || 1,
+        discountOnCleaning: q('.ch-disc').checked, active: q('.ch-active').checked });
+    });
+    return out;
+  }
+
+  function fieldValueForInput(f, v) {
+    if (v === null || v === undefined) return '';
+    if (f.type === 'percent') return v === '' ? '' : Math.round(v * 100000) / 1000;
+    return v;
+  }
+  function inferredFor(key) {
+    var inf = S.inferred; if (!inf) return null;
+    if (key === 'cleaningCost') return inf.cleaningFee;
+    return inf[key] === undefined || inf[key] === null ? null : inf[key];
+  }
+  function fmtInferred(f, v) {
+    if (f.type === 'percent') return pct(v, 2);
+    if (f.type === 'yen') return yen(v) + '円';
+    return esc(v);
+  }
+  function vMaster() {
+    if (!S.dash && !S.draft) { S.editingId = ''; S.draft = blankMaster(); }
+    var fields = S.boot.fields, m = S.draft || S.dash.master;
+    var groups = [];
+    fields.forEach(function (f) { if (groups.indexOf(f.group) < 0) groups.push(f.group); });
+    var form = groups.map(function (g) {
+      return '<fieldset><legend>' + esc(g) + '</legend>' + fields.filter(function (f) { return f.group === g; }).map(function (f) {
+        var v = fieldValueForInput(f, m[f.key]), input;
+        var attrs = ' id="f_' + f.key + '" data-key="' + f.key + '"' + (f.readonly ? ' readonly' : '');
+        if (f.type === 'channels') return '<div class="field wide"><div>' + chEditor(m.channels) + '<div class="help">' + esc(f.help) + '<br>手数料率：OTAは販売額に対する手数料、直販は決済手数料。掲載倍率：Baseに掛けて掲載する倍率（同じ価格なら1.00）。割引に清掃費を含む：清掃費を宿泊料に混ぜて掲載していて、割引が総額にかかるチャネルだけチェック（AirbnbもBooking.comも、清掃費を別に設定していれば不要）。</div></div></div>';
+        if (f.type === 'select') input = '<select' + attrs + '>' + f.options.map(function (o) { return '<option' + (String(v) === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>';
+        else if (f.type === 'textarea') input = '<textarea' + attrs + '>' + esc(v) + '</textarea>';
+        else {
+          var type = { number: 'number', yen: 'number', percent: 'number', ratio: 'number', date: 'date', url: 'url' }[f.type] || 'text';
+          var step = f.type === 'percent' ? ' step="0.01"' : f.type === 'ratio' ? ' step="0.01"' : f.type === 'yen' ? ' step="100"' : '';
+          input = '<input type="' + type + '"' + step + attrs + ' value="' + esc(v) + '" style="max-width:' + (type === 'number' ? '180px' : '420px') + '">';
+        }
+        var unit = f.type === 'percent' ? '<span class="unit">%</span>' : f.type === 'yen' ? '<span class="unit">円</span>' : f.type === 'ratio' ? '<span class="unit">倍</span>' : '';
+        var sv = inferredFor(f.key), sug = '';
+        if (sv !== null && (INFER_KEYS[f.key] || f.key === 'cleaningCost')) {
+          var same = String(fieldValueForInput(f, sv)) === String(v);
+          sug = same ? '<span class="sugg same">実績と一致</span>' : '<span class="sugg">実績：' + fmtInferred(f, sv) + ' <button class="btn small" data-apply="' + f.key + '">反映</button></span>';
+        }
+        return '<div class="field"><label for="f_' + f.key + '">' + esc(f.label) + (f.required ? '<span class="req">*</span>' : '') + '</label><div><div class="inwrap">' + input + unit + sug + '</div>' + (f.help ? '<div class="help">' + esc(f.help) + '</div>' : '') + '</div></div>';
+      }).join('') + '</fieldset>';
+    }).join('');
+    var inf = S.inferred, infBox = '';
+    if (inf) {
+      infBox = '<div class="card"><h2>実績データから読み取った内容</h2><p class="sub">確認済みの予約 ' + inf.sampleSize + '件から推定。緑の「反映」で入力欄に入ります（保存するまで確定しません）。</p>' +
+        '<div class="grid g4">' +
+        '<div class="kpi"><div class="label">素泊単価の実績</div><div class="big num">' + yen(inf.rateMin) + '〜' + yen(inf.rateMax) + '</div><div class="rows" style="grid-template-columns:1fr"><span style="text-align:left;color:var(--ink-2)">中央値 ' + yen(inf.rateMedian) + '円・最多 ' + yen(inf.standard) + '円</span></div></div>' +
+        '<div class="kpi"><div class="label">チャネル別の手数料率</div>' + (inf.channels || []).map(function (c) { return '<div class="rows"><span>' + esc(c.channel) + '（' + c.count + '件）</span><span>' + pct(c.rate, 2) + '</span></div>'; }).join('') + '</div>' +
+        '<div class="kpi"><div class="label">料金プラン</div>' + (inf.plans || []).map(function (p) { return '<div class="rows"><span>' + esc(p.plan) + '</span><span>' + p.count + '件</span></div>'; }).join('') + '</div>' +
+        '<div class="kpi"><div class="label">開業・人数</div><div class="rows"><span>最初のチェックイン</span><span>' + esc(inf.openDate || '—') + '</span><span>最大人数</span><span>' + (inf.capacity || '—') + '名</span></div></div>' +
+        '</div><p class="sub" style="margin-top:10px">料金の下限・上限は経営判断なので自動では入れません。宿泊税はAirHostのCSVでは0になることが多いため推定していません。</p></div>';
+    }
+    var isNew = editingId() === '';
+    return head(isNew ? 'マスタ登録（新規）' : 'マスタ登録') +
+      '<div class="note"><b>自動取得</b>は、取り込み済みのAirHost予約データから清掃費・手数料率・価格帯などを読み取ります。AirbnbやBooking.comには施設情報を取り出すAPIがなく、ページの自動読み取りは各社の規約で禁止されているため、この方法にしています。AirHost API（Premium）を契約した場合は、ここに取得元を追加できます。</div>' +
+      '<div class="toolbar"><button class="btn" id="btnAutofill"' + (isNew ? ' disabled' : '') + '>実績データから自動取得</button><button class="btn" id="btnApplyAll"' + (inf ? '' : ' disabled') + '>推定値をすべて反映</button><button class="btn" id="btnAddOta">新しいOTAを登録</button><button class="btn" id="btnNew">新しい施設を追加</button></div>' +
+      infBox + '<form id="masterForm" onsubmit="return false">' + form +
+      '<div class="sticky-actions"><button class="btn primary" id="btnSave">保存する</button><button class="btn" id="btnReset">入力を元に戻す</button><span class="muted" style="align-self:center;font-size:12px">施設名を変えると、過去の予約データとの照合が外れます（予約CSVの「物件名」と一致させてください）。</span></div></form>';
+  }
+  function readForm() {
+    var out = {}, fields = S.boot.fields;
+    fields.forEach(function (f) {
+      if (f.type === 'channels') { if ($('chTable')) out.channels = readChannels(); return; }
+      var el = $('f_' + f.key); if (!el) return;
+      var v = el.value;
+      if (f.type === 'percent') v = v === '' ? '' : Number(v) / 100;
+      out[f.key] = v;
+    });
+    out.id = editingId();
+    return out;
+  }
+  function blankMaster() {
+    var b = {}; S.boot.fields.forEach(function (f) { b[f.key] = f.default !== undefined ? f.default : ''; });
+    b.channels = [{ name: '自社・直販', kind: '直販', rate: 0.036, mult: 1, discountOnCleaning: false, active: true }];
+    b.id = ''; return b;
+  }
+  /** 編集中の施設ID。'' は新規。null は「今プルダウンで選んでいる施設」 */
+  function editingId() {
+    if (S.editingId !== null && S.editingId !== undefined) return S.editingId;
+    return S.dash && S.dash.master ? S.dash.master.id : '';
+  }
+  function wireMaster() {
+    var form = $('masterForm');
+    form.addEventListener('input', function () { S.draft = readForm(); });
+    form.addEventListener('change', function () { S.draft = readForm(); });
+    form.addEventListener('click', function (e) {
+      var t = e.target, ga = function (a) { return t.getAttribute ? t.getAttribute(a) : null; };
+      if (ga('data-addch') || ga('data-delch') !== null || ga('data-applych') !== null || ga('data-addinf')) {
+        e.preventDefault();
+        S.draft = readForm();
+        var list = S.draft.channels || [];
+        if (ga('data-addch')) list.push({ name: '', kind: 'OTA', rate: 0.15, mult: 1, discountOnCleaning: false, active: true });
+        else if (ga('data-delch') !== null) list.splice(+ga('data-delch'), 1);
+        else if (ga('data-applych') !== null) { var c = list[+ga('data-applych')], iv = (S.inferred.channels || []).filter(function (x) { return x.channel === c.name; })[0]; if (iv) c.rate = iv.rate; }
+        else { var nm = ga('data-addinf'), iv2 = (S.inferred.channels || []).filter(function (x) { return x.channel === nm; })[0]; list.push({ name: nm, kind: 'OTA', rate: iv2 ? iv2.rate : 0.15, mult: 1, discountOnCleaning: false, active: true }); }
+        S.draft.channels = list; render();
+        if (ga('data-addch')) { var ins = document.querySelectorAll('#chTable .ch-name'); if (ins.length) ins[ins.length - 1].focus(); }
+        return;
+      }
+      var k = ga('data-apply');
+      if (!k) return;
+      e.preventDefault();
+      var f = S.boot.fields.filter(function (x) { return x.key === k; })[0];
+      $('f_' + k).value = fieldValueForInput(f, inferredFor(k));
+      S.draft = readForm(); render();
+    });
+    $('btnAutofill').onclick = function () {
+      busy(true);
+      call('api_autofill', S.propertyId).then(function (r) { busy(false); S.inferred = r.inferred; S.draft = readForm(); render(); toast('実績データから読み取りました。緑の「反映」で入力欄に入ります。'); })
+        .catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+    };
+    $('btnApplyAll').onclick = function () {
+      S.draft = readForm();
+      Object.keys(INFER_KEYS).concat(['cleaningCost']).forEach(function (k) { var v = inferredFor(k); if (v !== null) S.draft[k] = v; });
+      var cl = S.draft.channels || [];
+      (S.inferred.channels || []).forEach(function (iv) {
+        var hit = cl.filter(function (c) { return c.name === iv.channel; })[0];
+        if (hit) { if (hit.kind !== '直販' || iv.rate > 0) hit.rate = iv.rate; }
+        else cl.push({ name: iv.channel, kind: 'OTA', rate: iv.rate, mult: 1, discountOnCleaning: false, active: true });
+      });
+      S.draft.channels = cl;
+      render(); toast('推定値を入力欄に入れました。内容を確認して「保存する」を押してください。');
+    };
+    $('btnAddOta').onclick = function () {
+      S.draft = readForm(); (S.draft.channels = S.draft.channels || []).push({ name: '', kind: 'OTA', rate: 0.15, mult: 1, discountOnCleaning: false, active: true });
+      render(); var ins = document.querySelectorAll('#chTable .ch-name'); if (ins.length) { ins[ins.length - 1].scrollIntoView({ block: 'center' }); ins[ins.length - 1].focus(); }
+    };
+    $('btnNew').onclick = function () { S.editingId = ''; S.draft = blankMaster(); S.inferred = null; render(); };
+    $('btnReset').onclick = function () { S.draft = null; S.editingId = null; render(); };
+    $('btnSave').onclick = function () {
+      var data = readForm();
+      busy(true);
+      call('api_saveMaster', data).then(function (m) {
+        toast('「' + m.name + '」を保存しました', 'ok');
+        S.propertyId = m.id; S.draft = null; S.inferred = null; S.editingId = null;
+        return boot();
+      }).catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+    };
+  }
+
+  /* =========================================================
+   * データ取込
+   * ======================================================= */
+  function vImport() {
+    var log = S.log || [];
+    var logTbl = log.length ? table(
+      [{ t: '取込日時' }, { t: 'ファイル' }, { t: '行数', cls: 'n' }, { t: '新規', cls: 'n' }, { t: '更新', cls: 'n' }, { t: '取込後の総件数', cls: 'n' }, { t: '物件' }, { t: '新規登録の物件' }],
+      log.map(function (l) { return '<tr><td>' + esc(l.at) + '</td><td>' + esc(l.file) + '</td><td class="n">' + esc(l.rows) + '</td><td class="n">' + esc(l.added) + '</td><td class="n">' + esc(l.updated) + '</td><td class="n">' + esc(l.total) + '</td><td>' + esc(l.properties) + '</td><td>' + esc(l.newProperties) + '</td></tr>'; })
+    ) : '<p class="empty">まだ取り込みの記録はありません。</p>';
+    // 期間は今日の日付から計算して、そのまま入れられる形で出す（先月1日〜13ヶ月先の月末）
+    var td = (S.boot && S.boot.today) || S.asOf, ty = +td.slice(0, 4), tm = +td.slice(5, 7);
+    function ymd(y, m, d) { return y + '/' + ('0' + m).slice(-2) + '/' + ('0' + d).slice(-2); }
+    var fy = tm === 1 ? ty - 1 : ty, fm = tm === 1 ? 12 : tm - 1;
+    var em = tm + 13, ey = ty + Math.floor((em - 1) / 12); em = ((em - 1) % 12) + 1;
+    var eDay = new Date(Date.UTC(ey, em, 0)).getUTCDate();
+    var from = ymd(fy, fm, 1), to = ymd(ey, em, eDay);
+    var cadence = '<div class="card cadence"><div class="when">週1回<small>毎週月曜の朝</small></div><h2>AirHostで予約データCSVを出して、上の枠に入れる</h2>' +
+      '<ol class="steps">' +
+      '<li>AirHost ＞ <b>インポート＆エクスポート</b> ＞ <b>予約と日次データのエクスポート</b> を開く</li>' +
+      '<li>種類：<b>予約データ</b>（「日次データ」ではない方）</li>' +
+      '<li>日付カテゴリー：<b>チェックイン日</b></li>' +
+      '<li>期間：<b class="period">' + from + ' 〜 ' + to + '</b><span class="muted">（今日 ' + td.replace(/-/g, '/') + ' 時点。先月1日から13ヶ月先の月末まで）</span></li>' +
+      '<li>ステータス：<b>全部にチェック</b>（キャンセル・ブロックも含める）</li>' +
+      '<li>物件：<b>全部</b></li>' +
+      '<li>エクスポートしたCSVを、この画面の上の枠に入れて「取り込む」</li></ol>' +
+      '<p class="sub">CSVを入れるのはこれだけです。同じ予約は上書きされるので、前回と期間が重なっても問題ありません。月初の確認（前月の実績・マスタの見直し）はCSVなしで行います。</p>' +
+      '<p class="sub">過去の予約をAirHostでまとめて直したときだけ、期間の開始を<b>開業日</b>にして出し直してください。</p></div>';
+    return '<div class="page-head"><h1>データ取込</h1><span class="meta">AirHostと自動でつながるまでは、週1回、予約データCSVを入れます</span></div>' +
+      '<div class="card"><h2>CSVを入れる</h2><p class="sub">同じ予約は上書きされるので、何度入れても重複しません。個人情報（氏名・電話・メール・国籍・住所）は取り込まずに捨てます。「日次データ」のCSVは使いません（入れるとエラーで止まります）。</p>' +
+      '<div class="drop" id="drop"><p style="margin:0 0 10px">ここにCSVファイルをドラッグ、または</p><input type="file" id="file" accept=".csv,text/csv"><p id="fileName" class="muted" style="margin:10px 0 0;font-size:12px"></p></div>' +
+      '<div style="margin-top:12px"><button class="btn primary" id="btnImport" disabled>取り込む</button></div><div id="importResult" style="margin-top:12px"></div></div>' +
+      cadence +
+      '<div class="card"><h2>取込の記録</h2>' + logTbl + '</div>';
+  }
+  function importResultHtml(r) {
+    if (!r) return '';
+    return '<div class="note" style="background:var(--good-bg)"><b>取り込みました（' + esc(r.at) + '）。</b>新規 ' + r.added + '件・更新 ' + r.updated + '件（取込後の総件数 ' + r.total + '件）' +
+      (r.newProperties ? '<br>新しい物件「' + esc(r.newProperties) + '」を施設マスタに登録しました。<b>「マスタ登録」で内容を確認してください。</b>' : '') +
+      (r.droppedColumns ? '<br><span class="muted">取り込まなかった個人情報の列：' + esc(r.droppedColumns) + '</span>' : '') + '</div>';
+  }
+  function wireImport() {
+    $('importResult').innerHTML = importResultHtml(S.lastImport);
+    var file = null, input = $('file'), drop = $('drop');
+    function pick(f) { file = f; $('fileName').textContent = f ? f.name + '（' + Math.round(f.size / 1024) + 'KB）' : ''; $('btnImport').disabled = !f; }
+    input.onchange = function () { pick(input.files[0]); };
+    drop.ondragover = function (e) { e.preventDefault(); drop.classList.add('over'); };
+    drop.ondragleave = function () { drop.classList.remove('over'); };
+    drop.ondrop = function (e) { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files[0]) pick(e.dataTransfer.files[0]); };
+    $('btnImport').onclick = function () {
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        busy(true);
+        call('api_importCsv', reader.result, file.name).then(function (r) {
+          S.lastImport = r;
+          $('importResult').innerHTML = importResultHtml(r);
+          toast('取り込みました', 'ok');
+          return call('api_importLog');
+        }).then(function (log) { S.log = log; return boot(); })
+          .then(function () { if (S.tab === 'import') render(); })
+          .catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+      };
+      reader.readAsText(file, 'UTF-8');
+    };
+  }
+
+  /* =========================================================
+   * 施策記録
+   * ======================================================= */
+  function blankMeasure() { return { id: '', date: S.asOf, category: '料金変更', channel: 'すべて', title: '', detail: '', stayFrom: '', stayTo: '', result: '' }; }
+  function effCell(e) { return e ? e.stays + '件・' + e.nights + '泊<br><span class="muted">' + (e.perNight ? yen(e.perNight) + '円/泊' : '—') + '</span>' : '<span class="muted">これから</span>'; }
+  function vMeasures() {
+    var d = S.dash, list = d.measures || [], mm = S.measureDraft || blankMeasure();
+    var cats = S.boot.measureCategories || [];
+    var chs = ['すべて'].concat((d.rates.list || []).map(function (c) { return c.name; }));
+    function inp(k, type, ph, w) { return '<input type="' + type + '" id="m_' + k + '" value="' + esc(mm[k]) + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + ' style="max-width:' + (w || '420px') + '">'; }
+    var form = '<form id="measureForm" onsubmit="return false"><div class="mform">' +
+      '<label for="m_date">実施日<span class="req">*</span></label><div>' + inp('date', 'date', '', '180px') + '</div>' +
+      '<label for="m_category">種類</label><div><select id="m_category">' + cats.map(function (c) { return '<option' + (c === mm.category ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
+      '<label for="m_channel">チャネル</label><div><select id="m_channel">' + chs.map(function (c) { return '<option' + (c === mm.channel ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
+      '<label for="m_title">施策<span class="req">*</span></label><div>' + inp('title', 'text', '例：12月平日を2ランク値下げ') + '</div>' +
+      '<label for="m_detail">内容</label><div><textarea id="m_detail" placeholder="何を、どう変えたか">' + esc(mm.detail) + '</textarea></div>' +
+      '<label for="m_stayFrom">対象の宿泊日</label><div class="inwrap">' + inp('stayFrom', 'date', '', '170px') + '<span class="unit">〜</span>' + inp('stayTo', 'date', '', '170px') + '<span class="help" style="margin:0">空欄なら全期間。入れると在庫表に印が付き、効果もその期間だけで見ます</span></div>' +
+      '<label for="m_result">結果・メモ</label><div><textarea id="m_result" placeholder="あとで振り返って記入">' + esc(mm.result) + '</textarea></div>' +
+      '</div><div class="sticky-actions" style="position:static;margin-top:12px"><button class="btn primary" id="btnSaveMeasure">' + (mm.id ? '更新する' : '記録する') + '</button>' + (mm.id ? '<button class="btn" id="btnCancelMeasure">編集をやめる</button>' : '') + '</div></form>';
+    var rows = list.map(function (m, i) {
+      var e = m.effect, diff = '';
+      if (e && e.after) {
+        var dn = e.after.nights - e.before.nights;
+        diff = chip(dn, '泊') + (e.elapsed < e.days ? '<br><span class="muted">' + e.elapsed + '/' + e.days + '日経過</span>' : '');
+      }
+      var del = S.confirmDel === m.id ? '<button class="btn small danger" data-delm="' + esc(m.id) + '" data-sure="1">削除する</button>' : '<button class="btn small" data-delm="' + esc(m.id) + '">削除</button>';
+      return '<tr><td class="n">' + (list.length - i) + '</td><td>' + esc(m.date) + '</td><td>' + esc(m.category) + '</td><td>' + (m.channel === 'すべて' ? 'すべて' : '<span class="sw" style="background:' + chColor(m.channel) + '"></span>' + esc(m.channel)) + '</td>' +
+        '<td><b>' + esc(m.title) + '</b>' + (m.detail ? '<div class="muted" style="font-size:12px;white-space:pre-wrap">' + esc(m.detail) + '</div>' : '') + '</td>' +
+        '<td>' + (m.stayFrom || m.stayTo ? esc((m.stayFrom || '') + '〜' + (m.stayTo || '')) : '<span class="muted">全期間</span>') + '</td>' +
+        '<td class="n">' + (e ? effCell(e.before) : '') + '</td><td class="n">' + (e ? effCell(e.after) : '') + '</td><td class="n">' + diff + '</td>' +
+        '<td style="white-space:pre-wrap;font-size:12px">' + esc(m.result) + '</td>' +
+        '<td style="white-space:nowrap"><button class="btn small" data-editm="' + esc(m.id) + '">編集</button> ' + del + '</td></tr>';
+    });
+    var tbl = list.length ? table([{ t: 'No', cls: 'n' }, { t: '実施日' }, { t: '種類' }, { t: 'チャネル' }, { t: '施策' }, { t: '対象の宿泊日' }, { t: '実施前14日', cls: 'n' }, { t: '実施後14日', cls: 'n' }, { t: '泊数の変化', cls: 'n' }, { t: '結果・メモ' }, { t: '' }], rows)
+      : '<p class="empty">まだ記録がありません。料金を変えた、割引を入れた、写真を差し替えた、などを実施した日に記録しておくと、ピックアップのグラフに印が付き、前後の予約の入り方を比べられます。</p>';
+    return head('施策記録') +
+      '<div class="note">実施した施策を記録します。<b>実施前14日・実施後14日</b>は、その期間に入った予約（キャンセル分を除く）の件数・泊数・素泊単価です。チャネルや対象の宿泊日を指定すると、その範囲だけで数えます。番号はピックアップのグラフの印と対応しています。</div>' +
+      '<div class="card"><h2>' + (mm.id ? '施策を編集' : '施策を記録する') + '</h2>' + form + '</div>' +
+      '<div class="card"><h2>これまでの施策</h2>' + tbl + '</div>';
+  }
+  function readMeasure() {
+    var o = { id: (S.measureDraft && S.measureDraft.id) || '', property: S.dash.master.name };
+    ['date', 'category', 'channel', 'title', 'detail', 'stayFrom', 'stayTo', 'result'].forEach(function (k) { o[k] = $('m_' + k).value; });
+    return o;
+  }
+  function wireMeasures() {
+    var f = $('measureForm');
+    f.addEventListener('input', function () { S.measureDraft = readMeasure(); });
+    f.addEventListener('change', function () { S.measureDraft = readMeasure(); });
+    $('btnSaveMeasure').onclick = function () {
+      var x = readMeasure(); busy(true);
+      call('api_saveMeasure', x).then(function (m) { S.measureDraft = null; toast('「' + m.title + '」を記録しました', 'ok'); return load(); })
+        .catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+    };
+    if ($('btnCancelMeasure')) $('btnCancelMeasure').onclick = function () { S.measureDraft = null; render(); };
+  }
+
+  function wirePickup() {
+    var sel = $('dailyFrom'); if (sel) sel.onchange = function () { loadDaily(sel.value + '-01'); };
+    var w = $('invWrap');
+    if (w) {
+      var dp = S.daily || S.dash.daily, idx = 0, last = dp.days[dp.days.length - 1].date;
+      if (S.asOf > dp.from && S.asOf <= last) dp.days.forEach(function (x, i) { if (x.date < S.asOf) idx = i + 1; });
+      w.scrollLeft = Math.max(0, idx - 3) * 40;
+    }
+  }
+
+  /* =========================================================
+   * イベント
+   * ======================================================= */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? (e.target.closest('button,[data-tab]') || e.target) : e.target;
+    var tab = t.getAttribute && t.getAttribute('data-tab');
+    if (tab) {
+      if (e.preventDefault) e.preventDefault();
+      if (S.pend && ((S.tab === 'ratecal' && Object.keys(S.pend.cur).length) || (S.tab === 'plan' && Object.keys(S.pend.plan).length)) && tab !== S.tab) toast('未保存の料金の変更があります（タブを戻ると残っています）', 'err');
+      S.tab = tab;
+      if (tab === 'import' && !S.log) { call('api_importLog').then(function (l) { S.log = l; render(); }).catch(function () {}); }
+      render(); window.scrollTo(0, 0); return;
+    }
+    var ch = t.getAttribute && t.getAttribute('data-ch'); if (ch) { S.rateChannel = ch; render(); return; }
+    var mt = t.getAttribute && t.getAttribute('data-m'); if (mt) { S.rateMetric = mt; render(); return; }
+    var cf = t.getAttribute && t.getAttribute('data-cal'); if (cf) { S.calFy = cf; render(); return; }
+    var al = t.getAttribute && t.getAttribute('data-align'); if (al) { loadDaily(null, al); return; }
+    var ry = t.getAttribute && t.getAttribute('data-rcyear');
+    if (ry) { var pr = ry.split(':'); S[pr[0] === 'plan' ? 'planYear' : 'rcYear'] = +pr[1]; render(); return; }
+    var cd = e.target.closest && e.target.closest('[data-compdate]');
+    if (cd) { var v = cd.getAttribute('data-compdate'); S.compDate = v && v !== S.compDate ? v : null; render(); return; }
+    var em = t.getAttribute && t.getAttribute('data-editm');
+    if (em) { var hit = (S.dash.measures || []).filter(function (m) { return m.id === em; })[0]; S.measureDraft = JSON.parse(JSON.stringify(hit)); render(); window.scrollTo(0, 0); return; }
+    var dm = t.getAttribute && t.getAttribute('data-delm');
+    if (dm) {
+      if (!t.getAttribute('data-sure')) { S.confirmDel = dm; render(); return; }
+      busy(true);
+      call('api_deleteMeasure', dm).then(function () { S.confirmDel = null; toast('削除しました'); return load(); }).catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
+      return;
+    }
+  });
+  $('property').addEventListener('change', function (e) { S.propertyId = e.target.value; S.draft = null; S.inferred = null; load(); });
+  $('asOf').addEventListener('change', function (e) { if (e.target.value) { S.asOf = e.target.value; load(); } });
+  $('btnReload').addEventListener('click', function () { boot(); });
+
+  renderTabs();
+  start();
+})();
+</script>
+
+</body>
+</html>
