@@ -757,7 +757,54 @@
     return head('月次実績') +
       '<div class="note">宿泊日ベース（連泊は1泊ずつに均等に按分）。<b>ADR</b>＝販売額÷泊数で、ゲストが払った清掃費も含みます（1泊予約が多い月ほど高く出ます）。<b>素泊単価</b>＝清掃費を除いた1泊の宿泊料で、レート表のBaseと同じ物差しです。値付けの判断には素泊単価を見てください。斜線の列は基準日より先の月（先行予約）です。</div>' +
       '<div class="card"><h2>全体</h2><p class="sub">年度計の前年比・差は、両年度とも実績がある月（' + ovN + 'ヶ月）だけで比べています。</p>' + table(hd, body) + '</div>' +
-      '<div class="card"><h2>チャネル別（FY' + d.fy + '）</h2>' + table([{ t: 'チャネル' }, { t: '' }].concat(hd.slice(2)), chRows) + '</div>';
+      '<div class="card"><h2>チャネル別（FY' + d.fy + '）</h2>' + table([{ t: 'チャネル' }, { t: '' }].concat(hd.slice(2)), chRows) + '</div>' +
+      airbnbCard(hd);
+  }
+
+  /** Airbnbアナリティクス（ホスト管理画面「実績 → 換算」の月次転記） */
+  function airbnbCard(hd) {
+    var d = S.dash, ab = d.airbnb;
+    if (!ab) return '';
+    if (!ab.current.hasData && !ab.previous.hasData) {
+      return '<div class="card"><h2>Airbnb アナリティクス</h2>' +
+        '<p class="empty">まだデータがありません。Airbnbホスト管理画面の「実績 → 換算」を月1回、DBの「Airbnb指標」シートに記録してください。</p></div>';
+    }
+    function fmt(kind, v) {
+      if (v === null || v === undefined) return '';
+      if (kind === 'rate') return pct(v, 1);
+      if (kind === 'rate2') return pct(v, 2);
+      return Math.round(v).toLocaleString('ja-JP');
+    }
+    var rows = ab.metrics.map(function (mt) {
+      var cur = ab.current.months, prv = ab.previous.months;
+      var isRate = mt.kind !== 'count';
+      var r1 = '<tr><td class="lbl" rowspan="3" title="' + esc(mt.help || '') + '">' + esc(mt.label) + '</td>' +
+        '<td class="fy-now">FY' + d.fy + '</td>' +
+        cur.map(function (x, i) { return '<td class="n' + (isFutureMonth(x.month) ? ' future' : '') + '">' + fmt(mt.kind, x[mt.key]) + '</td>'; }).join('') + '<td class="n"></td></tr>';
+      var r2 = '<tr class="prev"><td class="fy-prev">FY' + (d.fy - 1) + '</td>' +
+        prv.map(function (x) { return '<td class="n">' + fmt(mt.kind, x[mt.key]) + '</td>'; }).join('') + '<td class="n"></td></tr>';
+      var r3 = '<tr class="diff"><td class="fy-diff">' + (isRate ? '差' : '前年比') + '</td>' +
+        cur.map(function (x, i) {
+          var a = x[mt.key], b = prv[i][mt.key];
+          if (a === null || b === null) return '<td class="n"></td>';
+          return '<td class="n">' + (isRate ? pt(a - b) : pct(ratio(a, b), 0)) + '</td>';
+        }).join('') + '<td class="n"></td></tr>';
+      return r1 + r2 + r3;
+    });
+    var notes = ab.current.months.filter(function (x) { return x.note; })
+      .map(function (x) { return mlabel(x.month) + '：' + x.note; });
+    return '<div class="card"><h2>Airbnb アナリティクス（FY' + d.fy + '）</h2>' +
+      '<p class="sub">ホスト管理画面の「実績 → 換算」を月1回転記した値です。率は1ページ目インプレッション率→検索→閲覧→成約の順に、どこで落ちているかを見ます。</p>' +
+      table([{ t: '指標' }, { t: '年度' }].concat(hd.slice(2)), rows) +
+      '<div class="note" style="margin:12px 0 0">' +
+        '<b>読み方</b>　' +
+        '<b>1ページ目インプレッション率</b>が落ちていれば露出そのものが減っている（在庫・順位）。' +
+        '<b>検索→閲覧</b>が落ちていれば一覧で選ばれていない（カバー写真・タイトル・表示価格）。' +
+        '<b>閲覧→成約率</b>が落ちていればページで決まっていない（価格・説明文・キャンセルポリシー）。' +
+        '<b>類似リスティングとの差</b>がマイナスならエリア内の同格物件に負けている。' +
+        '保存数が多いのに成約が少なければ、価格で踏みとどまられているサインです。' +
+        (notes.length ? '<br><br><b>注意</b>　' + notes.map(esc).join(' ／ ') : '') +
+      '</div></div>';
   }
 
   /* =========================================================
