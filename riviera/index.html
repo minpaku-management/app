@@ -180,6 +180,20 @@
   .sugg { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; background: #EAF4EA; color: var(--good); border-radius: 6px; padding: 3px 4px 3px 9px; }
   .sugg.same { background: var(--line-2); color: var(--ink-3); padding-right: 9px; }
   .sticky-actions { position: sticky; bottom: 0; background: rgba(244,246,249,.95); padding: 12px 0; display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--line); }
+  .freshbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .fresh-item { display: flex; align-items: baseline; gap: 8px; flex: 1 1 280px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 12.5px; }
+  .fresh-item.warn { background: #FFF8E6; border-color: #F0DDA8; }
+  .fresh-item.bad { background: var(--bad-bg); border-color: #E8BDBD; }
+  .fresh-item .fresh-k { color: var(--ink-3); font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+  .fresh-item b { font-weight: 600; }
+  .fresh-item small { color: var(--ink-3); font-size: 11.5px; margin-left: auto; text-align: right; white-space: nowrap; }
+  .fresh-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; align-self: center; }
+  .fresh-dot.ok { background: var(--good); }
+  .fresh-dot.warn { background: #D79A14; }
+  .fresh-dot.bad { background: var(--bad); }
+  @media (max-width: 640px) { .fresh-item small { margin-left: 0; white-space: normal; text-align: left; } .fresh-item { flex-wrap: wrap; } }
+
   .note { font-size: 12.5px; color: var(--ink-2); background: #EEF3FA; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; }
 
   .drop { border: 2px dashed #B7C3D3; border-radius: var(--radius); padding: 28px; text-align: center; background: #fff; color: var(--ink-2); }
@@ -601,12 +615,52 @@
       S.dash = d; S.daily = null; S.draft = null; S.inferred = null; S.editingId = null; S.confirmDel = null; busy(false); render();
     }).catch(function (e) { busy(false); toast(errMsg(e), 'err'); });
   }
+  /** 画面の上段に出すデータの鮮度。予約は自動、料金は手動という切り分けをここで明示する */
+  function statusBar() {
+    var st = S.dash && S.dash.dataStatus;
+    if (!st) return '';
+    function dot(kind) { return '<span class="fresh-dot ' + kind + '"></span>'; }
+    var items = [];
+
+    // 予約
+    if (st.importFailed) {
+      items.push('<div class="fresh-item bad">' + dot('bad') + '<span class="fresh-k">予約</span>' +
+        '<b>取り込みに失敗しています</b><small>' + esc(st.importAt) + '　' + esc(st.importNote) + '</small></div>');
+    } else if (st.importAt) {
+      var stale = daysSince(st.importAt) >= 9;
+      items.push('<div class="fresh-item' + (stale ? ' warn' : '') + '">' + dot(stale ? 'warn' : 'ok') +
+        '<span class="fresh-k">予約</span>' +
+        '<b>' + (st.importAuto ? 'Beds24から自動取得（毎週月曜）' : '手動で取り込み') + '</b>' +
+        '<small>最終取込 ' + esc(st.importAt) + (stale ? '　※1週間以上更新がありません' : '') + '</small></div>');
+    } else {
+      items.push('<div class="fresh-item warn">' + dot('warn') + '<span class="fresh-k">予約</span><b>まだ取り込んでいません</b></div>');
+    }
+
+    // 料金
+    if (st.rateDays) {
+      items.push('<div class="fresh-item">' + dot('ok') + '<span class="fresh-k">料金</span>' +
+        '<b>手動で更新（Beds24から取得）</b>' +
+        '<small>' + esc(st.rateFrom) + '〜' + esc(st.rateTo) + ' の' + st.rateDays + '日分' +
+        (st.rateUpdatedAt ? '　最終更新 ' + esc(st.rateUpdatedAt) : '') + '</small></div>');
+    } else {
+      items.push('<div class="fresh-item warn">' + dot('warn') + '<span class="fresh-k">料金</span><b>レートカレンダーが空です</b></div>');
+    }
+
+    return '<div class="freshbar">' + items.join('') + '</div>';
+  }
+  function daysSince(at) {
+    var d = String(at).slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return 0;
+    var base = (S.boot && S.boot.today) || S.asOf;
+    return Math.floor((new Date(base) - new Date(d)) / 86400000);
+  }
+
   function render() {
     renderTabs();
     var el = $('content');
     if (!S.dash && S.tab !== 'import' && S.tab !== 'master') { el.innerHTML = '<div class="card"><p class="empty">まだ施設がありません。「データ取込」から予約データを入れると、物件が自動で登録されます。</p></div>'; return; }
     var f = { summary: vSummary, monthly: vMonthly, calendar: vCalendar, pickup: vPickup, pnl: vPnl, rates: vRates, ratecal: vRateCal, plan: vPlan, comp: vComp, measures: vMeasures, master: vMaster, import: vImport }[S.tab];
-    el.innerHTML = f();
+    el.innerHTML = statusBar() + f();
     if (S.tab === 'measures') wireMeasures();
     if (S.tab === 'ratecal' || S.tab === 'plan') wireRateCal();
     if (S.tab === 'comp') wireComp();
@@ -897,6 +951,7 @@
       row('OTA手数料', function (x) { return -x.otaFee; }),
       row('管理手数料（運営会社の収入）', function (x) { return -x.sb; }),
       row('清掃実費', function (x) { return -x.cleaningCost; }),
+      row('リネン・アメニティ', function (x) { return -x.linenCost; }),
       row('宿泊税', function (x) { return -x.tax; }),
       row('オーナー手残り（貢献利益）', function (x) { return x.contribution; }, { cls: 'total' }),
       row('貢献率', function (x) { return x.contributionRate; }, { fmt: function (v) { return pct(v); } }),
@@ -918,7 +973,7 @@
       beCard = '<div class="note">固定費がまだ入っていません。「マスタ登録」の<b>固定費（月額）</b>を入れると、営業利益と損益分岐の泊数が出ます。</div>';
     }
     return head('収支（推計）') +
-      '<div class="note"><b>オーナー側の収支</b>です。販売額から、OTA手数料・<b>運営会社の管理手数料</b>（＝運営会社の収入）・清掃の実費・宿泊税を引いた残りを「オーナー手残り」、さらに固定費（オーナー負担分）を引いたものを「オーナー営業利益」としています。<br><b>チェックイン月ベースの推計</b>です。OTA手数料は予約データの実額、管理手数料は' + esc(m.sbBase) + '×' + pct(m.sbRate) + '、清掃実費は1件' + yen(m.cleaningCost) + '円、宿泊税は大人1人1泊' + yen(m.taxPerAdult) + '円' + (m.taxStart ? '（' + esc(m.taxStart) + '以降）' : '') + 'で計算しています。月次実績（宿泊日ベース）とは、月をまたぐ連泊の計上月が違います。</div>' +
+      '<div class="note"><b>オーナー側の収支</b>です。販売額から、OTA手数料・<b>運営会社の管理手数料</b>（＝運営会社の収入）・清掃の実費・宿泊税を引いた残りを「オーナー手残り」、さらに固定費（オーナー負担分）を引いたものを「オーナー営業利益」としています。<br><b>チェックイン月ベースの推計</b>です。OTA手数料は予約データの実額、管理手数料は' + esc(m.sbBase) + '×' + pct(m.sbRate) + '、清掃実費は1件' + yen(m.cleaningCost) + '円、リネン・アメニティは1件' + yen(m.linenCost) + '円、宿泊税は大人1人1泊' + yen(m.taxPerAdult) + '円' + (m.taxStart ? '（' + esc(m.taxStart) + '以降）' : '') + 'で計算しています。月次実績（宿泊日ベース）とは、月をまたぐ連泊の計上月が違います。</div>' +
       beCard +
       '<div class="card"><h2>FY' + d.fy + ' 月別</h2><p class="sub">マイナスは差し引く費用。斜線の列は基準日より先の月（予約済み分のみ）。</p>' + table(hd, body.concat([prevRow])) + '</div>';
   }
@@ -1286,6 +1341,7 @@
       '<div><span>' + (ch.kind === '直販' ? '決済手数料' : 'OTA手数料') + '</span><b>' + pct(ch.rate, 1) + '</b></div>' +
       '<div><span>管理手数料</span><b>' + pct(m.sbRate, 0) + '</b><small>' + esc(/販売額/.test(m.sbBase) ? '販売額に対して' : '宿泊料（清掃費除く）に対して') + '</small></div>' +
       '<div><span>清掃の実費</span><b>' + yen(m.cleaningCost) + '円</b><small>1件あたり</small></div>' +
+      '<div><span>リネン・アメニティ</span><b>' + yen(m.linenCost) + '円</b><small>1件あたり</small></div>' +
       '<div><span>掲載倍率</span><b>' + (ch.mult || 1).toFixed(2) + '倍</b><small>' + (ch.mult && ch.mult !== 1 ? 'Base×' + ch.mult.toFixed(2) + 'で掲載' : 'Baseのまま掲載') + '</small></div>' +
       '<div class="wide"><span>計算</span><small>「宿泊料」＝Base×掲載倍率×（1−割引率）。AirbnbやBookingの画面に出る1泊の料金（清掃費は含まない）。' + disc + '。<br>「宿泊料（清掃費込）」＝宿泊料＋清掃費。Airbnbで競合と比べるときの額（' + clean + '・宿泊税は別）　／　「手取り」＝宿泊料（清掃費込） − ' + (ch.kind === '直販' ? '決済' : 'OTA') + '手数料 − 管理手数料（運営会社の収入）　／　「オーナー手残り」＝手取り − 清掃の実費（1泊1件・固定費は別）</small></div></div>';
     return head('レート表') +
